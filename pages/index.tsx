@@ -1,7 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import WelcomeLayout from '../components/welcome_layout'
-import * as db from '../database/db'
 
 function getContent() {
   return (
@@ -20,7 +19,6 @@ function getContent() {
 }
 
 export default function Home() {
-  db.fetchGames();
   return (
     <div className="container">
       <Head>
