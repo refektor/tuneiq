@@ -9,7 +9,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "child_process": "^1.0.2",
     "firebase": "^7.14.2",
     "firebase-admin": "^8.11.0",
     "next": "9.3.5",
