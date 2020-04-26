@@ -5,7 +5,7 @@ import WelcomeLayout from '../components/welcome_layout'
 function getContent() {
   return (
     <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
+          <a href="./creategame" className="card">
             <h3>Create a game &rarr;</h3>
             <p>Choose a genre, and share your game credentials with others.</p>
           </a>
