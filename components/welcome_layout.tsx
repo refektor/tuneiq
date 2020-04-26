@@ -3,7 +3,7 @@ function WelcomeLayout({ children }) {
         <div>
         <main>
         <h1 className="title">
-          Welcome to Tune IQ
+          Tune IQ
         </h1>
 
         <p className="description">
