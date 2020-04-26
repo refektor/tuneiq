@@ -4,7 +4,6 @@ import WelcomeLayout from '../components/welcome_layout'
 import GamesMenu from '../components/games_menu'
 import { Container } from '@material-ui/core'
 
-
 export default function Home() {
   return (
     <Container maxWidth="md">

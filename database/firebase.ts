@@ -1,5 +1,5 @@
 import firebase from 'firebase'
-import * as firebaseConfig from '../credentials/client';
+import { firebaseConfig } from '../credentials/client';
 
 export const database = () => { return !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app(); }
 
