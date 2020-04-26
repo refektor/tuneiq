@@ -1,4 +1,4 @@
-module.exports = {
+export const firebaseConfig = {
     apiKey: "AIzaSyAbU-2BUu2B88qzndC0CgLDgtDO2yfr6UY",
     authDomain: "tuneiq.firebaseapp.com",
     databaseURL: "https://tuneiq.firebaseio.com",
