@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Container, TextField, makeStyles, Radio, RadioGroup, FormControlLabel, Button } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import * as hash from 'password-hash';
 import * as db from "../../database/db";
+import Router from 'next/router'
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -19,7 +20,7 @@ const useStyles = makeStyles(theme => ({
 
 const genres = ["Pop", "Rock", "EDM", "Hip-Hop"] // TODO: fetch from db
 
-export default function CreateGame({ player }) {
+function CreateGame({ player }) {
     const classes = useStyles();
     const [name, setName] = useState("");
     const [nameLabel, setNameLabel] = useState("Name")
@@ -28,6 +29,12 @@ export default function CreateGame({ player }) {
     const [password, setPassword] = useState("");
 
     const [genre, setGenre] = useState(genres[0]);
+
+    useEffect(() => {
+        if (!player) {
+            Router.push('/')
+        }
+    });
 
     const handleNameChange = (e) => {
       const currentName = e.target.value;
@@ -57,10 +64,10 @@ export default function CreateGame({ player }) {
     const startGame = () => {
       const hashedPassword = hash.generate(password);
       console.log("Creating new game with params:", name, hashedPassword, genre, player);
-      return; //dont post to db yet
+      //return; //dont post to db yet
       db.createGame(name, password, genre, player).then(() => {
         //redirect to game page
-      });
+      }).catch((err)=>{console.log(err);});
       setPassword("") // clear password
     }
     
@@ -93,3 +100,9 @@ export default function CreateGame({ player }) {
         </Container>
       )
 }
+
+CreateGame.getInitialProps = async ctx => {
+    return {player: ctx.query.nickname};
+}
+
+export default CreateGame;

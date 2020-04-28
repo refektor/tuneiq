@@ -1,10 +1,45 @@
 import Head from 'next/head'
+import { useState, useEffect } from "react";
 import Link from 'next/link'
 import WelcomeLayout from '../components/welcome_layout'
 import GamesMenu from '../components/games_menu'
+import UserLogin from '../components/user_login'
 import { Container } from '@material-ui/core'
+import { Firebase } from '../database/firebase'
+import * as db from "../database/db";
 
-export default function Home() {
+
+let UID = "";
+
+function Home() {
+  const [nickname, setNickname] = useState("");
+
+  useEffect(() => {
+    Firebase.auth().signInAnonymously();
+  });
+
+  Firebase.auth().onAuthStateChanged(function(user) {
+    if (user?.displayName) {
+      setNickname(user.displayName);
+    } else {
+      // User is signed out.
+    }
+  });
+
+  function nicknameSet(validNickname) {
+    setNickname(validNickname);
+  }
+
+  function renderNickname() {
+    console.log(nickname)
+    if (!nickname) {
+      return (<UserLogin setNickname={nicknameSet}/>);
+    }
+    else {
+      return (<GamesMenu nickname={nickname}/>);
+    }
+  }
+
   return (
     <Container maxWidth="md">
       <Head>
@@ -12,9 +47,11 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <WelcomeLayout>
-        <GamesMenu/>
+      <WelcomeLayout userName={nickname}>
+        {renderNickname()}
       </WelcomeLayout>
     </Container>
   )
 }
+
+export default Home;

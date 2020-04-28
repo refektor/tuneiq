@@ -1,4 +1,13 @@
-function WelcomeLayout({ children }) {
+
+function WelcomeLayout({ userName, children }) {
+    function renderWelcomeMessage() {
+        if (userName) {
+            return `Welcome ${userName}, what is your Tune IQ?`;
+        } else {
+            return "What is your Tune IQ?";
+        }
+    }
+
     return (
         <div>
         <main>
@@ -7,7 +16,7 @@ function WelcomeLayout({ children }) {
         </h1>
 
         <p className="description">
-          What is your Tune IQ?
+          {renderWelcomeMessage()}
         </p>
 
         {children}
