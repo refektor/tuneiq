@@ -3,7 +3,8 @@ import { Container, TextField, makeStyles, Radio, RadioGroup, FormControlLabel, 
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import * as hash from 'password-hash';
 import * as db from "../../database/db";
-import Router from 'next/router'
+import { Firebase } from '../../database/firebase'
+import Auth from '../../components/auth'
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -30,12 +31,6 @@ function CreateGame({ player }) {
 
     const [genre, setGenre] = useState(genres[0]);
 
-    useEffect(() => {
-        if (!player) {
-            Router.push('/')
-        }
-    });
-
     const handleNameChange = (e) => {
       const currentName = e.target.value;
       setName(currentName);
@@ -61,7 +56,7 @@ function CreateGame({ player }) {
       setGenre(e.target.value); // seems this refreshes the component
     }
 
-    const startGame = () => {
+    const createGame = () => {
       const hashedPassword = hash.generate(password);
       console.log("Creating new game with params:", name, hashedPassword, genre, player);
       //return; //dont post to db yet
@@ -72,6 +67,7 @@ function CreateGame({ player }) {
     }
     
     return (
+        <Auth>
         <Container className={classes.root}>
           <TextField id="standard-name" label={nameLabel} value={name} autoComplete="off" error={nameError} onChange={handleNameChange}/>
           <TextField 
@@ -93,16 +89,13 @@ function CreateGame({ player }) {
             size="large"
             className={classes.button}
             startIcon={<PlayArrowIcon />}
-            onClick={startGame}
+            onClick={createGame}
           >
-            PLAY
+            CREATE
           </Button>
         </Container>
+        </Auth>
       )
-}
-
-CreateGame.getInitialProps = async ctx => {
-    return {player: ctx.query.nickname};
 }
 
 export default CreateGame;

@@ -8,9 +8,6 @@ import { Container } from '@material-ui/core'
 import { Firebase } from '../database/firebase'
 import * as db from "../database/db";
 
-
-let UID = "";
-
 function Home() {
   const [nickname, setNickname] = useState("");
 
@@ -31,12 +28,11 @@ function Home() {
   }
 
   function renderNickname() {
-    console.log(nickname)
     if (!nickname) {
       return (<UserLogin setNickname={nicknameSet}/>);
     }
     else {
-      return (<GamesMenu nickname={nickname}/>);
+      return (<GamesMenu/>);
     }
   }
 
