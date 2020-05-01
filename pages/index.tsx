@@ -6,22 +6,24 @@ import GamesMenu from '../components/games_menu'
 import UserLogin from '../components/user_login'
 import { Container } from '@material-ui/core'
 import { Firebase } from '../database/firebase'
+import Auth from '../components/auth'
+
 import * as db from "../database/db";
 
 function Home() {
   const [nickname, setNickname] = useState("");
 
-  useEffect(() => {
-    Firebase.auth().signInAnonymously();
-  });
+  // useEffect(() => {
+  //   Firebase.auth().signInAnonymously();
+  // });
 
-  Firebase.auth().onAuthStateChanged(function(user) {
-    if (user?.displayName) {
-      setNickname(user.displayName);
-    } else {
-      // User is signed out.
-    }
-  });
+  // Firebase.auth().onAuthStateChanged(function(user) {
+  //   if (user?.displayName) {
+  //     setNickname(user.displayName);
+  //   } else {
+  //     // signed out
+  //   }
+  // });
 
   function nicknameSet(validNickname) {
     setNickname(validNickname);
@@ -43,9 +45,13 @@ function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      
       <WelcomeLayout userName={nickname}>
-        {renderNickname()}
+      <Auth attemptSignIn={true} onSuccess={nicknameSet}>
+        <GamesMenu/>
+      </Auth>
       </WelcomeLayout>
+      
     </Container>
   )
 }
