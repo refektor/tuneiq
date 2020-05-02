@@ -28,12 +28,6 @@ export default class Auth extends Component<IProps, IState> {
     attemptSignIn: boolean;
     constructor(props) {
         super(props);
-        this.onSuccess = (nickname) => {
-            this.setState({authenticated: true, needsName: false})
-            if (this.props.onSuccess) {
-                this.props.onSuccess(nickname);
-            }
-        } 
         this.attemptSignIn = props.attemptSignIn;
         this.state = {
             authenticated: false,
@@ -42,7 +36,7 @@ export default class Auth extends Component<IProps, IState> {
         };
 
         Firebase.auth().onAuthStateChanged((user) => {
-            console.log("HEREEE")
+            console.log(`${user.uid}`)
             let authenticated = false;
             let needsName = true;
             if (user?.displayName) {
@@ -76,6 +70,13 @@ export default class Auth extends Component<IProps, IState> {
             this.setState({authenticated: true})
         }
     }
+
+    onSuccess(nickname) {
+        this.setState({authenticated: true, needsName: false})
+        if (this.props.onSuccess) {
+            this.props.onSuccess(nickname);
+        }
+    } 
 
     renderChildren() {
         if (this.state.authenticated) {

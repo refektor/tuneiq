@@ -13,18 +13,6 @@ import * as db from "../database/db";
 function Home() {
   const [nickname, setNickname] = useState("");
 
-  // useEffect(() => {
-  //   Firebase.auth().signInAnonymously();
-  // });
-
-  // Firebase.auth().onAuthStateChanged(function(user) {
-  //   if (user?.displayName) {
-  //     setNickname(user.displayName);
-  //   } else {
-  //     // signed out
-  //   }
-  // });
-
   function nicknameSet(validNickname) {
     setNickname(validNickname);
   }
