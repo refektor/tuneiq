@@ -1,6 +1,7 @@
-import { Container, TextField, makeStyles, Radio, RadioGroup, FormControlLabel, Button } from '@material-ui/core';
-import { useState, useEffect } from "react";
+import { TextField, Button } from '@material-ui/core';
+import { useState } from "react";
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth'
 
 
@@ -23,9 +24,16 @@ export default function JoinGame() {
     }
 
     return (
-        <Auth>
-        <Container>
-          <TextField id="standard-name" label={nameLabel} value={name} autoComplete="off" error={nameError} onChange={handleNameChange}/>
+      <Auth>
+        <PageWrapper>
+          <TextField 
+            id="standard-name" 
+            label={nameLabel} 
+            value={name} 
+            autoComplete="off" 
+            error={nameError} 
+            onChange={handleNameChange} 
+          />
           <TextField 
             id="standard-password-input" 
             label="Password" 
@@ -44,7 +52,7 @@ export default function JoinGame() {
           >
             JOIN
           </Button>
-        </Container>
-        </Auth>
+        </PageWrapper>
+      </Auth>
     );
 }

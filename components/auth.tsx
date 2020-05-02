@@ -24,11 +24,11 @@ interface IState {
 
 
 export default class Auth extends Component<IProps, IState> {
-    onSuccess: any;
     attemptSignIn: boolean;
     constructor(props) {
         super(props);
         this.attemptSignIn = props.attemptSignIn;
+        this.onSuccess = this.onSuccess.bind(this);
         this.state = {
             authenticated: false,
             needsName: true,
@@ -36,7 +36,7 @@ export default class Auth extends Component<IProps, IState> {
         };
 
         Firebase.auth().onAuthStateChanged((user) => {
-            console.log(`${user.uid}`)
+            console.log(`signed in as id: ${user.uid}`)
             let authenticated = false;
             let needsName = true;
             if (user?.displayName) {
@@ -57,12 +57,11 @@ export default class Auth extends Component<IProps, IState> {
         if (!Firebase.auth().currentUser) {
             // try to sign in if parent component indicated so
             if (this.attemptSignIn) {
-                console.log('erherf')
+                console.log('attempting sign in')
                 Firebase.auth().signInAnonymously();
                 this.setState({firebaseLoading: true});
             } else {
-                console.log('erherf23')
-
+                console.log('not attempting sign in, redirect to home page')
                 Router.replace("/");
             }
         } else {
@@ -82,9 +81,9 @@ export default class Auth extends Component<IProps, IState> {
         if (this.state.authenticated) {
             return this.props.children;
         } else if (this.state.firebaseLoading) {
-            return (<CircularProgress/>);
+            return (<CircularProgress />);
         } else if (this.state.needsName) {
-            return (<UserLogin setNickname={this.onSuccess}/>);
+            return (<UserLogin setNickname={this.onSuccess} />);
         }
     }
 

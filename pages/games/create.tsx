@@ -1,23 +1,27 @@
 import { useState, useEffect } from "react";
-import { Container, TextField, makeStyles, Radio, RadioGroup, FormControlLabel, Button } from '@material-ui/core';
+import { Container, TextField, Radio, RadioGroup, FormControlLabel, Button, makeStyles } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import * as hash from 'password-hash';
 import * as db from "../../database/db";
-import { Firebase } from '../../database/firebase'
-import Auth from '../../components/auth'
+import PageWrapper from '../../components/page_wrapper';
+import Auth from '../../components/auth';
 
-const useStyles = makeStyles(theme => ({
-    root: {
-      '& > *': {
-        margin: theme.spacing(1),
-        width: '25ch',
-      },
+// TODO: move this outside of here and reuse in join component
+const useStyles = makeStyles((theme) => ({
+    inputChild: {
+      margin: theme.spacing(2, 'auto'),
+      display: 'block',
+      width: '25ch',
     },
 
     button: {
-      margin: theme.spacing(1)
+      margin: theme.spacing(2, 'auto'),
+      display: 'block',
+      '& > *': {
+        display: 'inline-block'
+      }
     }
-  }));
+}));
 
 const genres = ["Pop", "Rock", "EDM", "Hip-Hop"] // TODO: fetch from db
 
@@ -68,32 +72,43 @@ function CreateGame({ player }) {
     
     return (
         <Auth>
-        <Container className={classes.root}>
-          <TextField id="standard-name" label={nameLabel} value={name} autoComplete="off" error={nameError} onChange={handleNameChange}/>
-          <TextField 
-            id="standard-password-input" 
-            label="Password" 
-            type="password" 
-            autoComplete="off" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-          />
-          <RadioGroup aria-label="genre" name="Genre" value={genre} onChange={handleGenreChange}>
-            {genres.map(genre => (
-              <FormControlLabel key={genre} value={genre} control={<Radio />} label={genre} />
-            ))}
-          </RadioGroup>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            className={classes.button}
-            startIcon={<PlayArrowIcon />}
-            onClick={createGame}
-          >
-            CREATE
-          </Button>
-        </Container>
+          <PageWrapper>
+            <Container maxWidth="sm">
+              <TextField 
+                id="standard-name" 
+                label={nameLabel} 
+                value={name} 
+                autoComplete="off" 
+                error={nameError} 
+                onChange={handleNameChange}
+                className={classes.inputChild}
+              />
+              <TextField 
+                id="standard-password-input" 
+                label="Password" 
+                type="password" 
+                autoComplete="off" 
+                value={password}
+                className={classes.inputChild}
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+              <RadioGroup aria-label="genre" name="Genre" value={genre} onChange={handleGenreChange}>
+                {genres.map(genre => (
+                  <FormControlLabel key={genre} value={genre} control={<Radio />} label={genre} />
+                ))}
+              </RadioGroup>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                className={classes.button}
+                startIcon={<PlayArrowIcon />}
+                onClick={createGame}
+              >
+                CREATE
+              </Button>
+            </Container>
+          </PageWrapper>
         </Auth>
       )
 }
