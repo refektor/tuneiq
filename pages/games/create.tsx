@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Container, TextField, makeStyles, Radio, RadioGroup, FormControlLabel, Button } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import * as hash from 'password-hash';
 import * as db from "../../database/db";
+import { Firebase } from '../../database/firebase'
+import Auth from '../../components/auth'
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -19,7 +21,7 @@ const useStyles = makeStyles(theme => ({
 
 const genres = ["Pop", "Rock", "EDM", "Hip-Hop"] // TODO: fetch from db
 
-export default function CreateGame({ player }) {
+function CreateGame({ player }) {
     const classes = useStyles();
     const [name, setName] = useState("");
     const [nameLabel, setNameLabel] = useState("Name")
@@ -54,17 +56,18 @@ export default function CreateGame({ player }) {
       setGenre(e.target.value); // seems this refreshes the component
     }
 
-    const startGame = () => {
+    const createGame = () => {
       const hashedPassword = hash.generate(password);
       console.log("Creating new game with params:", name, hashedPassword, genre, player);
-      return; //dont post to db yet
+      //return; //dont post to db yet
       db.createGame(name, password, genre, player).then(() => {
         //redirect to game page
-      });
+      }).catch((err)=>{console.log(err);});
       setPassword("") // clear password
     }
     
     return (
+        <Auth>
         <Container className={classes.root}>
           <TextField id="standard-name" label={nameLabel} value={name} autoComplete="off" error={nameError} onChange={handleNameChange}/>
           <TextField 
@@ -86,10 +89,13 @@ export default function CreateGame({ player }) {
             size="large"
             className={classes.button}
             startIcon={<PlayArrowIcon />}
-            onClick={startGame}
+            onClick={createGame}
           >
-            PLAY
+            CREATE
           </Button>
         </Container>
+        </Auth>
       )
 }
+
+export default CreateGame;

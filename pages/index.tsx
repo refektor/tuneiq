@@ -1,10 +1,31 @@
 import Head from 'next/head'
+import { useState, useEffect } from "react";
 import Link from 'next/link'
 import WelcomeLayout from '../components/welcome_layout'
 import GamesMenu from '../components/games_menu'
+import UserLogin from '../components/user_login'
 import { Container } from '@material-ui/core'
+import { Firebase } from '../database/firebase'
+import Auth from '../components/auth'
 
-export default function Home() {
+import * as db from "../database/db";
+
+function Home() {
+  const [nickname, setNickname] = useState("");
+
+  function nicknameSet(validNickname) {
+    setNickname(validNickname);
+  }
+
+  function renderNickname() {
+    if (!nickname) {
+      return (<UserLogin setNickname={nicknameSet}/>);
+    }
+    else {
+      return (<GamesMenu/>);
+    }
+  }
+
   return (
     <Container maxWidth="md">
       <Head>
@@ -12,9 +33,15 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <WelcomeLayout>
+      
+      <WelcomeLayout userName={nickname}>
+      <Auth attemptSignIn={true} onSuccess={nicknameSet}>
         <GamesMenu/>
+      </Auth>
       </WelcomeLayout>
+      
     </Container>
   )
 }
+
+export default Home;

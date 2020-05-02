@@ -37,9 +37,9 @@ export async function createGame(name, password, genre, player) {
     newGame['players'] = {}
     newGame['players'][player] = true;
 
-    createPlayer(player);
+    //createPlayer(player);
     console.log("name game", newGame);
-    return; // don't add to db yet
+    //return; // don't add to db yet
     
     db.collection("games")
         .add(newGame)
@@ -55,14 +55,15 @@ export async function createGame(name, password, genre, player) {
  * 
  * @param name name of player
  */
-async function createPlayer(name) {
-    const newPlayer = { name }
+export async function createPlayer(uid, name) {
+    const newPlayer = { uid, name }
     console.log("new player: ", newPlayer);
-    return; // don't add to db yet
+    //return; // don't add to db yet
     db.collection("players")
-        .add(newPlayer)
+        .doc()
+        .set(newPlayer)
         .then((docRef) => {
-            console.log("succesfully created player with id: ", docRef.id);
+            console.log("succesfully created player with id: ", uid);
         })
         .catch((error) => {
             console.log(error);
@@ -87,6 +88,28 @@ export async function fetchPlayer(player) {
             console.log(error);
         });
     
+    return result;
+}
+
+/**
+ * 
+ * @param player name of player
+ */
+export async function fetchPlayerById(id) {
+    const result = []
+    await db.collection("players")
+        .where("uid", "==", id)
+        .get()
+        .then(players => {
+            players.forEach(p => {
+                console.log(p.data())
+                result.push(p.data())
+            });
+        })
+        .catch(error => {
+            console.log(error);
+        });
+
     return result;
 }
 
