@@ -68,7 +68,7 @@ export default function GenrePicker({ onPicked }) {
             {Array.from(data.map((item, index) => (
                 <Box key={index} className={classes.wrapper} maxWidth="md" >
                     {item ? (
-                        <Box className={classes.item}>
+                        <Box key={index} className={classes.item}>
                             <Button >
                                 <img 
                                     style={{ width: 75, height: 75}}
@@ -76,7 +76,7 @@ export default function GenrePicker({ onPicked }) {
                                     src={item.src}
                                     onClick={() => onPicked(item.genre)} />
                             </Button>
-                            <Typography className={classes.text} variant="caption" color="textSecondary">
+                            <Typography key={index} className={classes.text} variant="caption" color="textSecondary">
                                 {item.genre}
                             </Typography>
                         </Box>

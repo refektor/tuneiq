@@ -8,7 +8,7 @@ import { Component, Fragment } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
-import { Firebase } from '../database/firebase';
+import { Firebase, FB } from '../database/firebase';
 
 
 interface IProps {
@@ -57,9 +57,14 @@ export default class Auth extends Component<IProps, IState> {
             // try to sign in if parent component indicated so
             if (this.attemptSignIn) {
                 console.log('attempting sign in')
-                Firebase.auth().signInAnonymously().catch((error) => {
-                    console.log(`error: ${error.code}, ${error.message}`);
-                });
+                //clear session after user exits tab
+                Firebase.auth().setPersistence(FB.auth.Auth.Persistence.SESSION)
+                    .then(function() {
+                        return Firebase.auth().signInAnonymously();
+                    })
+                    .catch(function(error) {
+                        console.log(`error: ${error.code}, ${error.message}`);
+                    });
             } else {
                 this.toggleAuthentication(!this.state.authenticated);
                 console.log('not attempting sign in, redirect to home page')
@@ -83,14 +88,12 @@ export default class Auth extends Component<IProps, IState> {
 
     renderChildren() {
         if (this.state.authenticated) {
-            let finalChildren = [];
-            finalChildren.push(this.props.children);
-
             if (this.state.needsName) {
-                finalChildren.push(<UserLogin setNickname={this.onSuccess} />);
+                // if we append it to an array, react complains about needing a unique key for each child
+                return(this.props.children && <UserLogin setNickname={this.onSuccess} />);
             }
 
-            return finalChildren;
+            return this.props.children;
             
         } else {
             return (<CircularProgress />);
