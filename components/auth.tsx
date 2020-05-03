@@ -46,7 +46,7 @@ export default class Auth extends Component<IProps, IState> {
             } else {
                 console.log("user has no name");
             }
-            console.log("needs name:", needsName, "authenticated:", authenticated);
+
             this.setState({ needsName, authenticated });
         });
     }
