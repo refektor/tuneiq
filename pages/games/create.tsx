@@ -5,6 +5,7 @@ import * as hash from 'password-hash';
 import * as db from "../../database/db";
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth';
+import GenrePicker from '../../components/genre_picker';
 
 // TODO: move this outside of here and reuse in join component
 const useStyles = makeStyles((theme) => ({
@@ -23,17 +24,15 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const genres = ["Pop", "Rock", "EDM", "Hip-Hop"] // TODO: fetch from db
-
 function CreateGame({ player }) {
     const classes = useStyles();
     const [name, setName] = useState("");
-    const [nameLabel, setNameLabel] = useState("Name")
+    const [nameLabel, setNameLabel] = useState("Game Name")
     const [nameError, setNameError] = useState(false);
 
     const [password, setPassword] = useState("");
 
-    const [genre, setGenre] = useState(genres[0]);
+    const [genre, setGenre] = useState('');
 
     const handleNameChange = (e) => {
       const currentName = e.target.value;
@@ -47,23 +46,24 @@ function CreateGame({ player }) {
           setNameLabel("Game name is already taken")
         } else {
           setNameError(false)
-          setNameLabel("Name")
+          setNameLabel("Game Name")
         }
       });
 
       // reset on key storkes
       setNameError(false)
-      setNameLabel("Name")
+      setNameLabel("Game Name")
     }
 
-    const handleGenreChange = (e) => {
-      setGenre(e.target.value); // seems this refreshes the component
+    const handleGenreChange = (genre) => {
+      console.log(genre);
+      setGenre(genre); // can prob pass this directly in
     }
 
     const createGame = () => {
       const hashedPassword = hash.generate(password);
       console.log("Creating new game with params:", name, hashedPassword, genre, player);
-      //return; //dont post to db yet
+      return; //dont post to db yet
       db.createGame(name, password, genre, player).then(() => {
         //redirect to game page
       }).catch((err)=>{console.log(err);});
@@ -92,11 +92,7 @@ function CreateGame({ player }) {
                 className={classes.inputChild}
                 onChange={(e) => setPassword(e.target.value)} 
               />
-              <RadioGroup aria-label="genre" name="Genre" value={genre} onChange={handleGenreChange}>
-                {genres.map(genre => (
-                  <FormControlLabel key={genre} value={genre} control={<Radio />} label={genre} />
-                ))}
-              </RadioGroup>
+              <GenrePicker onPicked={handleGenreChange} />
               <Button
                 variant="contained"
                 color="primary"
