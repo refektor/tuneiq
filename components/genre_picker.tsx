@@ -8,7 +8,7 @@ const data = [
     src:
       'https://i.ytimg.com/vi/pLqipJNItIo/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLBkklsyaw9FxDmMKapyBYCn9tbPNQ',
     genre: 'tech house',
-    //times_played: 'Don Diablo', //future feature?
+    //times_played: '130', //future feature?
   },
   {
     src:
