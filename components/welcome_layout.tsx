@@ -1,5 +1,6 @@
+import PageWrapper from './page_wrapper';
 
-function WelcomeLayout({ userName, children }) {
+export default function WelcomeLayout({ userName, children }) {
     function renderWelcomeMessage() {
         if (userName) {
             return `Welcome ${userName}, what is your Tune IQ?`;
@@ -9,29 +10,11 @@ function WelcomeLayout({ userName, children }) {
     }
 
     return (
-        <div>
-        <main>
-        <h1 className="title">
-          Tune IQ
-        </h1>
+        <PageWrapper>
+          <p className="description">
+            {renderWelcomeMessage()}
+          </p>
 
-        <p className="description">
-          {renderWelcomeMessage()}
-        </p>
-
-        {children}
-      </main>
-
-      <footer>
-        <a
-          href="https://github.com/refektor/tuneiq"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Check us out <img src="/Github-Mark-32px.png" />
-        </a>
-      </footer>
-    </div>); 
+          {children}
+        </PageWrapper>); 
 }
-
-export default WelcomeLayout;

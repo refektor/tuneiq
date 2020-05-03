@@ -4,11 +4,11 @@
  * we will route to the home screen.
  */
 
-import { useState, useEffect, Fragment, Component } from "react";
+import { Component } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
-import { Firebase } from '../database/firebase';
+import { Firebase, FB } from '../database/firebase';
 
 
 interface IProps {
@@ -19,36 +19,35 @@ interface IProps {
 interface IState {
     authenticated: boolean;
     needsName: boolean;
-    firebaseLoading: boolean;
 }
 
-
 export default class Auth extends Component<IProps, IState> {
-    onSuccess: any;
     attemptSignIn: boolean;
     constructor(props) {
         super(props);
         this.attemptSignIn = props.attemptSignIn;
+        this.onSuccess = this.onSuccess.bind(this);
+
         this.state = {
             authenticated: false,
-            needsName: true,
-            firebaseLoading: false
+            needsName: false, //if this is initialized with true, the name popup comes up while waiting to get user from firebase
         };
 
         Firebase.auth().onAuthStateChanged((user) => {
-            console.log(`${user.uid}`)
             let authenticated = false;
             let needsName = true;
             if (user?.displayName) {
+                console.log(`signed in as id: ${user.displayName}`)
                 if (this.props.onSuccess) {
                     this.props.onSuccess(user.displayName);
                 }
                 authenticated = true;
                 needsName = false;
             } else {
-              // signed out
+                console.log("user has no name");
             }
-            this.setState({needsName, authenticated, firebaseLoading: false});
+
+            this.setState({ needsName, authenticated });
         });
     }
     
@@ -57,17 +56,16 @@ export default class Auth extends Component<IProps, IState> {
         if (!Firebase.auth().currentUser) {
             // try to sign in if parent component indicated so
             if (this.attemptSignIn) {
-                console.log('erherf')
-                Firebase.auth().signInAnonymously();
-                this.setState({firebaseLoading: true});
+                console.log('attempting sign in')
+                Firebase.auth().signInAnonymously().catch(function(error) {
+                    console.log(`error: ${error.code}, ${error.message}`);
+                });
             } else {
-                console.log('erherf23')
-
+                console.log('not attempting sign in, redirect to home page');
                 Router.replace("/");
             }
         } else {
-            //setAuthenticated(true);
-            this.setState({authenticated: true})
+            this.setState({ authenticated : true })
         }
     }
 
@@ -76,22 +74,24 @@ export default class Auth extends Component<IProps, IState> {
         if (this.props.onSuccess) {
             this.props.onSuccess(nickname);
         }
-    } 
+    }
 
     renderChildren() {
+        if (this.state.needsName) {
+            return(<UserLogin setNickname={this.onSuccess} />);
+        }
+
         if (this.state.authenticated) {
             return this.props.children;
-        } else if (this.state.firebaseLoading) {
-            return (<CircularProgress/>);
-        } else if (this.state.needsName) {
-            return (<UserLogin setNickname={this.onSuccess}/>);
+        } else {
+            return (<CircularProgress />);
         }
     }
 
     render() {
         return (
             <>
-            {this.renderChildren()}
+                {this.renderChildren()}
             </>
         );
     }
