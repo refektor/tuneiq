@@ -6,26 +6,10 @@ import * as db from "../../database/db";
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth';
 import GenrePicker from '../../components/genre_picker';
-
-// TODO: move this outside of here and reuse in join component
-const useStyles = makeStyles((theme) => ({
-    inputChild: {
-      margin: theme.spacing(2, 'auto'),
-      display: 'block',
-      width: '25ch',
-    },
-
-    button: {
-      margin: theme.spacing(2, 'auto'),
-      display: 'block',
-      '& > *': {
-        display: 'inline-block'
-      }
-    }
-}));
+import useGameStyles from '../../styles/game_styles';
 
 function CreateGame({ player }) {
-    const classes = useStyles();
+    const classes = useGameStyles();
     const [name, setName] = useState("");
     const [nameLabel, setNameLabel] = useState("Game Name")
     const [nameError, setNameError] = useState(false);
