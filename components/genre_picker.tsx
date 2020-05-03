@@ -81,7 +81,7 @@ export default function GenrePicker({ onPicked }) {
                             </Typography>
                         </Box>
                     ) : (
-                        <Skeleton variant="rect" width={210} height={118} />
+                        <Skeleton variant="rect" />
                     )}
                 </Box>
             )))}

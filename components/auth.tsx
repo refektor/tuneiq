@@ -4,7 +4,7 @@
  * we will route to the home screen.
  */
 
-import { useState, useEffect, Fragment, Component } from "react";
+import { Component, Fragment } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
@@ -19,9 +19,7 @@ interface IProps {
 interface IState {
     authenticated: boolean;
     needsName: boolean;
-    firebaseLoading: boolean;
 }
-
 
 export default class Auth extends Component<IProps, IState> {
     attemptSignIn: boolean;
@@ -29,17 +27,18 @@ export default class Auth extends Component<IProps, IState> {
         super(props);
         this.attemptSignIn = props.attemptSignIn;
         this.onSuccess = this.onSuccess.bind(this);
+        this.toggleAuthentication = this.toggleAuthentication.bind(this);
+
         this.state = {
             authenticated: false,
-            needsName: true,
-            firebaseLoading: false
+            needsName: true, //could a user ever needName but be not authenticated yet?
         };
 
         Firebase.auth().onAuthStateChanged((user) => {
-            console.log(`signed in as id: ${user.uid}`)
             let authenticated = false;
             let needsName = true;
-            if (user?.displayName) {
+            if (user) {
+                console.log(`signed in as id: ${user.uid}`)
                 if (this.props.onSuccess) {
                     this.props.onSuccess(user.displayName);
                 }
@@ -48,7 +47,7 @@ export default class Auth extends Component<IProps, IState> {
             } else {
               // signed out
             }
-            this.setState({needsName, authenticated, firebaseLoading: false});
+            this.setState({ needsName, authenticated });
         });
     }
     
@@ -58,15 +57,16 @@ export default class Auth extends Component<IProps, IState> {
             // try to sign in if parent component indicated so
             if (this.attemptSignIn) {
                 console.log('attempting sign in')
-                Firebase.auth().signInAnonymously();
-                this.setState({firebaseLoading: true});
+                Firebase.auth().signInAnonymously().catch((error) => {
+                    console.log(`error: ${error.code}, ${error.message}`);
+                });
             } else {
+                this.toggleAuthentication(!this.state.authenticated);
                 console.log('not attempting sign in, redirect to home page')
                 Router.replace("/");
             }
         } else {
-            //setAuthenticated(true);
-            this.setState({authenticated: true})
+            this.toggleAuthentication(!this.state.authenticated);
         }
     }
 
@@ -77,21 +77,31 @@ export default class Auth extends Component<IProps, IState> {
         }
     } 
 
+    toggleAuthentication(toggle) {
+        this.setState({ authenticated : toggle})
+    }
+
     renderChildren() {
         if (this.state.authenticated) {
-            return this.props.children;
-        } else if (this.state.firebaseLoading) {
+            let finalChildren = [];
+            finalChildren.push(this.props.children);
+
+            if (this.state.needsName) {
+                finalChildren.push(<UserLogin setNickname={this.onSuccess} />);
+            }
+
+            return finalChildren;
+            
+        } else {
             return (<CircularProgress />);
-        } else if (this.state.needsName) {
-            return (<UserLogin setNickname={this.onSuccess} />);
         }
     }
 
     render() {
         return (
-            <>
-            {this.renderChildren()}
-            </>
+            <Fragment>
+                {this.renderChildren()}
+            </Fragment>
         );
     }
 }
