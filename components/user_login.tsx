@@ -23,9 +23,16 @@ export default function UserLogin(props) {
 
     return (
         <form noValidate autoComplete="off">
-            <TextField error={hasError} id="standard-basic" label="Nickname" 
-                helperText={errorText} onChange={(e) => setNickname(e.target.value)}/>
-            <Button variant="contained" onClick={createNicknameClicked}>Create</Button>
+            <TextField 
+                error={hasError} 
+                id="standard-basic" 
+                label="Nickname" 
+                helperText={errorText} 
+                onChange={(e) => setNickname(e.target.value)}
+            />
+            <Button variant="contained"  onClick={createNicknameClicked}>
+                Create
+            </Button>
         </form>
     )
 }

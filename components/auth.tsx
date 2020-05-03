@@ -4,7 +4,7 @@
  * we will route to the home screen.
  */
 
-import { Component, Fragment } from "react";
+import { Component } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
@@ -37,15 +37,15 @@ export default class Auth extends Component<IProps, IState> {
         Firebase.auth().onAuthStateChanged((user) => {
             let authenticated = false;
             let needsName = true;
-            if (user) {
-                console.log(`signed in as id: ${user.uid}`)
+            if (user?.displayName) {
+                console.log(`signed in as id: ${user.displayName}`)
                 if (this.props.onSuccess) {
                     this.props.onSuccess(user.displayName);
                 }
                 authenticated = true;
                 needsName = false;
             } else {
-              // signed out
+                console.log("user has no name");
             }
             this.setState({ needsName, authenticated });
         });
@@ -66,12 +66,11 @@ export default class Auth extends Component<IProps, IState> {
                         console.log(`error: ${error.code}, ${error.message}`);
                     });
             } else {
-                this.toggleAuthentication(!this.state.authenticated);
-                console.log('not attempting sign in, redirect to home page')
+                console.log('not attempting sign in, redirect to home page');
                 Router.replace("/");
             }
         } else {
-            this.toggleAuthentication(!this.state.authenticated);
+            this.setState({ authenticated : true })
         }
     }
 
@@ -89,8 +88,7 @@ export default class Auth extends Component<IProps, IState> {
     renderChildren() {
         if (this.state.authenticated) {
             if (this.state.needsName) {
-                // if we append it to an array, react complains about needing a unique key for each child
-                return(this.props.children && <UserLogin setNickname={this.onSuccess} />);
+                return(<UserLogin setNickname={this.onSuccess} />);
             }
 
             return this.props.children;
@@ -102,9 +100,9 @@ export default class Auth extends Component<IProps, IState> {
 
     render() {
         return (
-            <Fragment>
+            <>
                 {this.renderChildren()}
-            </Fragment>
+            </>
         );
     }
 }
