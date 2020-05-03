@@ -27,11 +27,10 @@ export default class Auth extends Component<IProps, IState> {
         super(props);
         this.attemptSignIn = props.attemptSignIn;
         this.onSuccess = this.onSuccess.bind(this);
-        this.toggleAuthentication = this.toggleAuthentication.bind(this);
 
         this.state = {
             authenticated: false,
-            needsName: true, //could a user ever needName but be not authenticated yet?
+            needsName: false, //if this is initialized with true, the name popup comes up while waiting to get user from firebase
         };
 
         Firebase.auth().onAuthStateChanged((user) => {
@@ -47,6 +46,7 @@ export default class Auth extends Component<IProps, IState> {
             } else {
                 console.log("user has no name");
             }
+            console.log("needs name:", needsName, "authenticated:", authenticated);
             this.setState({ needsName, authenticated });
         });
     }
@@ -57,14 +57,9 @@ export default class Auth extends Component<IProps, IState> {
             // try to sign in if parent component indicated so
             if (this.attemptSignIn) {
                 console.log('attempting sign in')
-                //clear session after user exits tab
-                Firebase.auth().setPersistence(FB.auth.Auth.Persistence.SESSION)
-                    .then(function() {
-                        return Firebase.auth().signInAnonymously();
-                    })
-                    .catch(function(error) {
-                        console.log(`error: ${error.code}, ${error.message}`);
-                    });
+                Firebase.auth().signInAnonymously().catch(function(error) {
+                    console.log(`error: ${error.code}, ${error.message}`);
+                });
             } else {
                 console.log('not attempting sign in, redirect to home page');
                 Router.replace("/");
@@ -79,20 +74,15 @@ export default class Auth extends Component<IProps, IState> {
         if (this.props.onSuccess) {
             this.props.onSuccess(nickname);
         }
-    } 
-
-    toggleAuthentication(toggle) {
-        this.setState({ authenticated : toggle})
     }
 
     renderChildren() {
-        if (this.state.authenticated) {
-            if (this.state.needsName) {
-                return(<UserLogin setNickname={this.onSuccess} />);
-            }
+        if (this.state.needsName) {
+            return(<UserLogin setNickname={this.onSuccess} />);
+        }
 
+        if (this.state.authenticated) {
             return this.props.children;
-            
         } else {
             return (<CircularProgress />);
         }
