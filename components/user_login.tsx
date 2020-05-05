@@ -1,6 +1,6 @@
 import { TextField, Button } from '@material-ui/core'
 import { useState } from 'react' 
-import { Firebase } from '../database/firebase'
+import FirebaseApp from '../firebase/firebase'
 
 export default function UserLogin(props) {
     const [errorText, setErrorText] = useState("");
@@ -8,7 +8,7 @@ export default function UserLogin(props) {
     const [hasError, setHasError] = useState(false);
 
     function createNicknameClicked(e) {
-        const user = Firebase.auth().currentUser;
+        const user = FirebaseApp.auth().currentUser;
 
         user.updateProfile({
             displayName: nickname,
