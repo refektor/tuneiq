@@ -1,12 +1,16 @@
 /**
  * Page repsonsible for hosting the game content.
  */
-import { Fragment, Component } from "react";
+import { Component } from "react";
 import ReactPlayer from 'react-player'
 import { Button } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import Leaderboard from '../../components/leaderboard';
 
 const testUrl = "https://p.scdn.co/mp3-preview/4839b070015ab7d6de9fec1756e1f3096d908fba?cid=774b29d4f13844c495f206cafdad9c86";
+
+// TODO: fetch from db
+const players = [{"name": "domdolla", "score": 15},{"name": "sonnyfodera", "score": 12},{"name": "dombresky", "score": 10}];
 
 interface IState {
     playing: boolean;
@@ -26,7 +30,7 @@ export default class PlayGame extends Component<IProps, IState> {
 
      render() {
          return (
-            <Fragment>
+            <>
                 <ReactPlayer url={testUrl} playing={this.state.playing} />
                 <Button
                     variant="contained"
@@ -37,7 +41,8 @@ export default class PlayGame extends Component<IProps, IState> {
                 >
                 PLAY
                 </Button>
-            </Fragment>
+                <Leaderboard players={players} />
+            </>
          )
      }
  }
