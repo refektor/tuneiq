@@ -5,7 +5,7 @@ export default function WelcomeLayout({ userName, children }) {
         if (userName) {
             return `Welcome ${userName}, what is your Tune IQ?`;
         } else {
-            return "What is your Tune IQ?";
+            return "What is your Tune IQ?" 
         }
     }
 
@@ -16,5 +16,5 @@ export default function WelcomeLayout({ userName, children }) {
           </p>
 
           {children}
-        </PageWrapper>); 
+        </PageWrapper>);
 }

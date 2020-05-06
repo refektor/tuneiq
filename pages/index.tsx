@@ -25,7 +25,7 @@ function Home() {
         </Auth>
       </WelcomeLayout>
     </Container>
-  )
+  );
 }
 
 export default Home;

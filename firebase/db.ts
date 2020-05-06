@@ -1,6 +1,6 @@
-import { database } from "./firebase";
+import FirebaseApp from "./firebase";
 
-const db = database().firestore();
+const db = FirebaseApp.firestore();
 
 /**
  * 

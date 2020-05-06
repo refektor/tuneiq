@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Container, TextField, Radio, RadioGroup, FormControlLabel, Button, makeStyles } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import * as hash from 'password-hash';
-import * as db from "../../database/db";
+import * as db from "../../firebase/db";
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth';
 import GenrePicker from '../../components/genre_picker';
