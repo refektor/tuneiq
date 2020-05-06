@@ -3,15 +3,15 @@
  * Parameters used for game creation
  */
 type GameConfig = {
-    genre?: string, 
-    artist?: string,
+    genre?: string; 
+    artist?: string;
 };
 
-function createGame(gameName: string, gamePassword: string, gameConfig: GameConfig): string  {
+function createGame(gameName: string, gamePassword: string, gameConfig: GameConfig): Promise<string>  {
     return "gameId";
 }
 
-function joinGame(gameName: string, gamePassword: string): string {
+function joinGame(gameName: string, gamePassword: string): Promise<string> {
     return "gameId";
 }
 
@@ -28,5 +28,9 @@ function increasePlayerScore(gameId: string, userId: string, timeSinceRoundStart
 }
 
 export {
-    createGame
+    createGame,
+    joinGame,
+    startGame,
+    leaveGame,
+    increasePlayerScore,
 };
