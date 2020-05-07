@@ -41,5 +41,5 @@ jobs:
       - name: Run linters
         uses: hallee/eslint-action@master
         with:
-          repo-token: ${{secrets.GITHUB_TOKEN}}
+          repo-token: ${{secrets.github_token}}
  
