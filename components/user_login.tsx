@@ -1,6 +1,8 @@
 import { TextField, Button } from '@material-ui/core'
 import { useState } from 'react' 
-import FirebaseApp from '../firebase/firebase'
+import {getFirebaseApp} from '../firebase/firebase'
+
+const FirebaseApp = getFirebaseApp();
 
 export default function UserLogin(props) {
     const [errorText, setErrorText] = useState("");
