@@ -8,7 +8,7 @@ import { Component } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
-import { Firebase, FB } from '../database/firebase';
+import FirebaseApp from '../firebase/firebase';
 
 
 interface IProps {
@@ -30,10 +30,10 @@ export default class Auth extends Component<IProps, IState> {
 
         this.state = {
             authenticated: false,
-            needsName: false, //if this is initialized with true, the name popup comes up while waiting to get user from firebase
+            needsName: false, //if this is initialized with true, the name popup comes up while waiting to get user from FirebaseApp
         };
 
-        Firebase.auth().onAuthStateChanged((user) => {
+        FirebaseApp.auth().onAuthStateChanged((user) => {
             let authenticated = false;
             let needsName = true;
             if (user?.displayName) {
@@ -53,11 +53,11 @@ export default class Auth extends Component<IProps, IState> {
     
     componentDidMount() {
         // if not signed in
-        if (!Firebase.auth().currentUser) {
+        if (!FirebaseApp.auth().currentUser) {
             // try to sign in if parent component indicated so
             if (this.attemptSignIn) {
                 console.log('attempting sign in')
-                Firebase.auth().signInAnonymously().catch(function(error) {
+                FirebaseApp.auth().signInAnonymously().catch(function(error) {
                     console.log(`error: ${error.code}, ${error.message}`);
                 });
             } else {
