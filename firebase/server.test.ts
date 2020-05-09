@@ -1,25 +1,35 @@
+import { FakeFirestore } from 'firestore-jest-mock';
+import { 
+    mockCollection, 
+    mockWhere,
+    mockGet
+} from 'firestore-jest-mock/mocks/firestore';
 
-import * as server from './server';
-import {getFirebaseApp} from "./firebase";
+// TODO: change these to test our db interfaces instead of actual db
+// i.e test that db.fetchGame(name) expects to call mockWhere
+describe('We can query', () => {
+    const db = new FakeFirestore({
+        database: {
+            games: [
+                { name: 'dirtytech', password: 'followthefish', genre: 'techhouse', players: null },
+                { name: 'popstarz', password: 'imturning22', genre: 'pop', players: null },
+            ],
+        }
+    });
 
-jest.mock('./firebase', () => {
-    return {
-        getFirebaseApp: jest.fn()
-    }
-});
+    /**
+     * tests the following:
+     * can query collection 'games'
+     * can query by where clause
+     * 
+     */
+    test('fetch game', async () => {
+        await db.collection("games")
+            .where('name', '==','dirtytech')
+            .get();
 
-describe("createGame", () => {
-    it("create game successfully", () => {
-        // GIVEN
-        //jest.spyOn(server, 'db');
-        //mockAdd.mockReturnValue()
-        (getFirebaseApp as jest.Mock).mockReturnValue({
-            firestore: () => ({
-                collection: () => ({
-                    add: () => {return 'yo'}
-                })
-            })
-        })
-
+            expect(mockCollection).toHaveBeenCalledWith('games');
+            expect(mockWhere).toHaveBeenCalledWith('name', '==', 'dirtytech');
+            expect(mockGet).toHaveBeenCalled();
     });
 });

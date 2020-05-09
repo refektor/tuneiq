@@ -7,7 +7,7 @@ import { Button } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import Leaderboard from '../../components/leaderboard';
 
-import { getFirebaseApp } from "../../firebase/firebase";
+import FirebaseApp from "../../firebase/firebase";
 import firebase from 'firebase'
 
 const db = getFirebaseApp().firestore();
