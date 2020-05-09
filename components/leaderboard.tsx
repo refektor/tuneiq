@@ -23,8 +23,11 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export default function Leaderboard({ players }) {
+export default function Leaderboard({ leaderboard }) {
     const classes = useStyles();
+    if (leaderboard) {
+        leaderboard.sort((a,b) => {return a.score < b.score ? 1 : -1});
+    }
 
     return (
         <Box overflow="hidden" className={classes.root}>
@@ -41,7 +44,7 @@ export default function Leaderboard({ players }) {
                 </Typography>
                 <Divider />
                 <List>
-                {players.map((player, index) => (
+                {leaderboard && leaderboard.map((player, index) => (
                     <ListItem button key={player.name}>
                         <ListItemIcon>
                             <Avatar>{player.name.substring(0,1).toUpperCase()}</Avatar>
