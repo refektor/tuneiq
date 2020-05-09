@@ -7,10 +7,10 @@ import { Button } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import Leaderboard from '../../components/leaderboard';
 
-import { database } from "../../database/firebase";
+import { getFirebaseApp } from "../../firebase/firebase";
 import firebase from 'firebase'
 
-const db = database().firestore();
+const db = getFirebaseApp().firestore();
 
 const testUrl = "https://p.scdn.co/mp3-preview/4839b070015ab7d6de9fec1756e1f3096d908fba?cid=774b29d4f13844c495f206cafdad9c86";
 
@@ -57,11 +57,10 @@ export default class PlayGame extends Component<IProps, IState> {
                     } else {
                         console.log("nope");
                     }
-                    
                 })
-                }, err => {
-                    console.log(`Encountered error: ${err}`);
-                });
+            }, err => {
+                console.log(`Encountered error: ${err}`);
+            });
      }
 
      render() {

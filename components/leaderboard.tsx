@@ -43,9 +43,9 @@ export default function Leaderboard({ leaderboard }) {
                     Leaderboard
                 </Typography>
                 <Divider />
-                <List>
+                <List id="leaderboard">
                 {leaderboard && leaderboard.map((player, index) => (
-                    <ListItem button key={player.name}>
+                    <ListItem key={player.name}>
                         <ListItemIcon>
                             <Avatar>{player.name.substring(0,1).toUpperCase()}</Avatar>
                         </ListItemIcon>
