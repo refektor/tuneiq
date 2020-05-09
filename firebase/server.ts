@@ -12,43 +12,40 @@ type GameConfig = {
 
 
 function createGame(gameName: string, gamePassword: string, gameConfig: GameConfig): Promise<string>  {
-    /*
-    return new Promise(function(resolve, reject) {
-        reject("HII");
-    });
-    */
-   return "game_id";
+    return "game_id";
 }
 
-function joinGame(gameId: string, playerId: string, playerName: string): Promise<string> {
+
+function joinGame(gameId: string, playerId: string, playerName: string) {
     return new Promise(function(resolve, reject) {
         firestore.collection("games")
         .doc(gameId)
         .get()
-        .then(game => {
+        .then((game) => {
             const gameData = game.data();
             const leaderBoard = gameData.leaderBoard;
-            if (Object.keys(leaderBoard).length < MAX_PLAYERS_PER_GAME){
+            if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME){
+                reject(`Game ${gameId} is full`);
+            }
+            else if(playerId in leaderBoard){
+                reject(`Player ${playerId} has already joined game ${gameId}.`);
+            }
+            else{
                 leaderBoard[playerId] = {"name": playerName, "score": 0}
                 firestore.collection("games")
                 .doc(gameId)
                 .update({ 'leaderBoard' : leaderBoard })
-                .then(function() {
-                    console.log(`Player ${playerId} has joined the game!`);
-                    resolve(`Joined game ${gameId}!`)
+                .then(result => {
+                    resolve(`Player ${playerId} has joined  game ${gameId}!`)
+                    console.log(result)
                 })
-                .catch(function(error) {
-                    console.error(`Error joining game: ${error}`);
+                .catch(error => {
                     reject(`Error joining game: ${error}`)
                 });
-            } else {
-                reject(`Game ${gameId} is full`);
             }
-        })
-        .catch(error => {
-            console.log(error);
+        }).catch(error => {
             reject(`Could not find game with ID ${gameId}`);
-        })
+        });
     });
 }
 

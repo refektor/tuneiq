@@ -11,6 +11,7 @@ jest.mock('./firebase', () => {
 });
 
 
+
 describe("createGame", () => {
     it("create game successfully", () => {
         // GIVEN
@@ -27,6 +28,7 @@ describe("createGame", () => {
     });
 });
 
+
 describe("joinGame", () => {
     it("joins game successfully", () => {
         // GIVEN
@@ -40,8 +42,10 @@ describe("joinGame", () => {
                 })
             })
         })*/
-        return server.joinGame("7iFDy0vaJnbxW3pYPgtu", "QqovzQtHcw9mFOfGkBb1", "vanbossboi").then(data => {
+        return server.joinGame("7iFDy0vaJnbxW3pYPgtu", "rCBxuA6zypN5PriubHjB", "dombresky").then(data => {
             console.log(data);
+          }).catch(error => {
+            console.log(error);
           });
     });
 });
