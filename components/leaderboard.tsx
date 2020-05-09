@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Drawer, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, makeStyles, Avatar } from '@material-ui/core';
+import { Box, Drawer, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, makeStyles, Avatar, ListItemSecondaryAction } from '@material-ui/core';
 
 const drawerWidth = 300;
 
@@ -25,8 +25,8 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Leaderboard({ leaderboard }) {
     const classes = useStyles();
-    if (leaderboard && leaderboard.some((item) => (item.score !== 0))) {
-        leaderboard.sort((a,b) => {return a.score < b.score ? 1 : -1});
+    if (leaderboard) {
+        leaderboard.sort((a,b) => {return a.score < b.score});
     }
 
     return (
@@ -50,7 +50,9 @@ export default function Leaderboard({ leaderboard }) {
                             <Avatar>{player.name.substring(0,1).toUpperCase()}</Avatar>
                         </ListItemIcon>
                         <ListItemText primary={player.name} />
-                        <ListItemText primary={player.score} />
+                        <ListItemSecondaryAction>
+                        <ListItemText primary={player.score}/>
+                        </ListItemSecondaryAction>
                     </ListItem>
                 ))}
                 </List>
