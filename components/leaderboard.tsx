@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Drawer, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, makeStyles, Avatar } from '@material-ui/core';
 
-const drawerWidth = 600;
+const drawerWidth = 300;
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Leaderboard({ leaderboard }) {
     const classes = useStyles();
-    if (leaderboard) {
+    if (leaderboard && leaderboard.some((item) => (item.score !== 0))) {
         leaderboard.sort((a,b) => {return a.score < b.score ? 1 : -1});
     }
 

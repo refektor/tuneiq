@@ -5,11 +5,19 @@ import { Fragment, Component } from "react";
 import ReactPlayer from 'react-player'
 import { Button, Drawer } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import FirebaseApp from '../../firebase/firebase';
+import {getFirebaseApp} from '../../firebase/firebase';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
 import AnswerList from '../../components/answers';
+import Leaderboard from '../../components/leaderboard';
+import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 
+const FirebaseApp = getFirebaseApp();
+
+const useStyles = (theme: Theme) =>
+  createStyles({
+    
+  });
 
 enum EventType {
     START = "starts",
@@ -36,16 +44,16 @@ interface State {
     roundDuration?: number;
     roundInSession?: boolean;
     gameEnded?: boolean;
+    leaderboard?: any;
 
 };
 
 interface Props {
-    gameId: string
+    gameId: string;
+    classes: any;
 }
 
-
-
-export default class PlayGame extends Component<Props, State> {
+class PlayGame extends Component<Props, State> {
      constructor(props) {
         super(props);
         this.state = {
@@ -57,6 +65,7 @@ export default class PlayGame extends Component<Props, State> {
             roundDuration: 10000,
             roundInSession: false,
             gameEnded: false,
+            leaderboard: []
         };
 
         FirebaseApp.firestore().collection("games").doc("7iFDy0vaJnbxW3pYPgtu")
@@ -68,12 +77,14 @@ export default class PlayGame extends Component<Props, State> {
      handleGameUpdate(gameObj): void {
         console.log(gameObj);
         const isHost: boolean = gameObj.hostId === FirebaseApp.auth().currentUser?.uid;
-        const now = new Date().getTime();
-        console.log(now);
+        const leaderboard = Object.keys(gameObj.leaderBoard).map((id,index) => {
+            return { 'name': gameObj.leaderBoard[id].name, 'score': gameObj.leaderBoard[id].score }
+        });
         this.setState({
             numberOfRounds: gameObj.rounds.length,
             rounds: gameObj.rounds,
-            isHost
+            isHost,
+            leaderboard
         })
 
         if (gameObj.startTime) {
@@ -118,7 +129,7 @@ export default class PlayGame extends Component<Props, State> {
                 if (timingEvents.length === 0) {
                     // end game!
                     clearInterval(interval);
-                    this.setState({gameEnded: true})
+                    this.setState({gameEnded: true, gameStarted: false})
                     return;
                 }
                 // change display (start/end round)
@@ -140,7 +151,7 @@ export default class PlayGame extends Component<Props, State> {
                 }
             } else {
                 this.setState({
-                    countdownMessage: `Round ${round} ${event} in ${Math.ceil(remainingTime / 1000)}`,
+                    countdownMessage: `Round ${round}/${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
                 })
             }
         }, 100);
@@ -167,7 +178,7 @@ export default class PlayGame extends Component<Props, State> {
                 <>
                 <img src="/music-gif.gif"/>
                 <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
-                <p className="description">Round {this.state.currentRound}</p>
+                <p className="description">What is the name of this tune?</p>
                 <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
                 </>
                 }
@@ -190,12 +201,11 @@ export default class PlayGame extends Component<Props, State> {
      }
 
      render() {
+        const { classes } = this.props;
          return (
             <PageWrapper>
             <Auth attemptSignIn={true}>
-            <Drawer anchor="right">
-
-            </Drawer>
+            <Leaderboard leaderboard={this.state.leaderboard} />
             {this.state.gameStarted &&
             <>
             <p className="description">Game started!!!</p>
@@ -209,6 +219,8 @@ export default class PlayGame extends Component<Props, State> {
          )
      }
  }
+
+ export default withStyles(useStyles)(PlayGame);
 
  export async function getServerSideProps(context) {
     return {
