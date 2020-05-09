@@ -19,7 +19,7 @@ export async function fetchGame(game) {
         .catch(error => {
             console.log(error);
         });
-    
+
     return result;
 }
 
@@ -40,7 +40,7 @@ export async function createGame(name, password, genre, player) {
     //createPlayer(player);
     console.log("name game", newGame);
     //return; // don't add to db yet
-    
+
     db.collection("games")
         .add(newGame)
         .then((docRef) => {
@@ -87,7 +87,7 @@ export async function fetchPlayer(player) {
         .catch(error => {
             console.log(error);
         });
-    
+
     return result;
 }
 
@@ -129,12 +129,12 @@ export async function addPlayerToGame(game, player) {
                 players[player] = false
                 db.collection("games")
                     .doc(g.id)
-                    .update({ 'players' : players })
+                    .update({ 'players': players })
             });
         })
         .catch(error => {
             console.log(error);
         });
-    
+
     return result;
 }
