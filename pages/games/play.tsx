@@ -1,99 +1,217 @@
 /**
  * Page repsonsible for hosting the game content.
  */
-import { Component } from "react";
+import { Fragment, Component } from "react";
 import ReactPlayer from 'react-player'
-import { Button } from '@material-ui/core';
+import { Button, Drawer } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import Leaderboard from '../../components/leaderboard';
+import FirebaseApp from '../../firebase/firebase';
+import Auth from '../../components/auth';
+import PageWrapper from '../../components/page_wrapper';
+import AnswerList from '../../components/answers';
 
-import { getFirebaseApp } from "../../firebase/firebase";
-import firebase from 'firebase'
 
-const db = getFirebaseApp().firestore();
+enum EventType {
+    START = "starts",
+    END = "ends",
+}
 
-const testUrl = "https://p.scdn.co/mp3-preview/4839b070015ab7d6de9fec1756e1f3096d908fba?cid=774b29d4f13844c495f206cafdad9c86";
+type TimeEvent = {
+    time: number;
+    event: EventType;
+    round: number;
+}
 
-interface IState {
+interface State {
     playing: boolean;
-    gameId: String;
-    leaderboard: any;
+    gameStarted: boolean;
+    rounds?: any[];
+    songUrl?: string;
+    numberOfRounds?: number; 
+    isHost?: boolean;
+    startTime?: number;
+    currentRound?: number;
+    countdownMessage?: string;
+    intermissionDuration?: number;
+    roundDuration?: number;
+    roundInSession?: boolean;
+    gameEnded?: boolean;
+
+};
+
+interface Props {
+    gameId: string
 }
 
-interface IProps {
 
-}
 
-export default class PlayGame extends Component<IProps, IState> {
+export default class PlayGame extends Component<Props, State> {
      constructor(props) {
         super(props);
-        this.updatePlayer = this.updatePlayer.bind(this);
         this.state = {
             playing: false,
-            gameId: '',
-            leaderboard: null
+            gameStarted: false,
+            songUrl: "",
+            currentRound: 0,
+            intermissionDuration: 5000,
+            roundDuration: 10000,
+            roundInSession: false,
+            gameEnded: false,
+        };
+
+        FirebaseApp.firestore().collection("games").doc("7iFDy0vaJnbxW3pYPgtu")
+            .onSnapshot((doc) => {
+                this.handleGameUpdate(doc.data());
+            });
+     }
+
+     handleGameUpdate(gameObj): void {
+        console.log(gameObj);
+        const isHost: boolean = gameObj.hostId === FirebaseApp.auth().currentUser?.uid;
+        const now = new Date().getTime();
+        console.log(now);
+        this.setState({
+            numberOfRounds: gameObj.rounds.length,
+            rounds: gameObj.rounds,
+            isHost
+        })
+
+        if (gameObj.startTime) {
+            this.startGame(gameObj.startTime);
         }
      }
 
-     updatePlayer(player) {
-        db.collection('games').doc('8XHtwngmzpadhpfa9anV')
-            .update({
-                [`leaderboard.${player.id}.score`]: firebase.firestore.FieldValue.increment(player.score),
-            })
+     startGame(startTime: number) {
+        const {roundDuration, intermissionDuration, numberOfRounds} = this.state;
+        const timingEvents: TimeEvent[] = [];
+
+        let future = new Date().getTime() + 5000;//startTime;
+        for (let i = 0; i < numberOfRounds; ++i) {
+            future += (i === 0) ? 0 : intermissionDuration;
+            timingEvents.push({
+                time: future,
+                round: i+1,
+                event: EventType.START
+            });
+
+            future += roundDuration;
+            timingEvents.push({
+                time: future,
+                round: i+1,
+                event: EventType.END
+            });
+        }
+
+        console.log(timingEvents);
+
+        this.setState({
+            gameStarted: true,
+            currentRound: 1,
+        })
+
+        const interval = setInterval(() => {
+            const {time, round, event} = timingEvents[0];
+            const now = new Date().getTime();
+            const remainingTime = time - now;
+            if (remainingTime < 0) {
+                timingEvents.shift();
+                if (timingEvents.length === 0) {
+                    // end game!
+                    clearInterval(interval);
+                    this.setState({gameEnded: true})
+                    return;
+                }
+                // change display (start/end round)
+                const {event, round} = timingEvents[0];
+                if (event === EventType.START) {
+                    // intermission
+                    this.setState({
+                        songUrl: "",
+                        playing: false,
+                    })
+                } else {
+                    // round
+                    this.setState({
+                        currentRound: round,
+                        songUrl: this.state.rounds[round]?.url,
+                        playing: true,
+                    })
+
+                }
+            } else {
+                this.setState({
+                    countdownMessage: `Round ${round} ${event} in ${Math.ceil(remainingTime / 1000)}`,
+                })
+            }
+        }, 100);
      }
 
-     componentDidMount() {
-        this.setState({ gameId: '8XHtwngmzpadhpfa9anV' });
-        const docRef = db.collection('games').doc('8XHtwngmzpadhpfa9anV');
+     getRoundAnswers() {
+        const roundIdx = this.state.currentRound - 1;
+        
+        return this.state.rounds[roundIdx].tracks.map((track) => {
+            return {id: track.id, displayText: track.title, isCorrect: track.isAnswer};
+        });
+     }
 
-        docRef.onSnapshot(docSnapshot => {
-            db.collection('games').doc('8XHtwngmzpadhpfa9anV').get()
-                .then(doc => {
-                    if (doc.exists) {
-                        const leaderboard = Object.keys(doc.data().leaderboard).map((id,index) => {
-                            return { 'name': doc.data().leaderboard[id].name, 'score': doc.data().leaderboard[id].score }
-                        });
-                        this.setState({ leaderboard });
-                    } else {
-                        console.log("nope");
-                    }
-                })
-            }, err => {
-                console.log(`Encountered error: ${err}`);
-            });
+     correctAnswerSubmitted() {
+
+     }
+
+     getContent() {
+        if (this.state.gameStarted) {
+            return (
+                <>
+                {
+                this.state.songUrl && 
+                <>
+                <img src="/music-gif.gif"/>
+                <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
+                <p className="description">Round {this.state.currentRound}</p>
+                <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
+                </>
+                }
+                </>
+            )
+        } else if (!this.state.gameEnded) { // waiting for game to start
+            return (
+                <>
+                <p className="description">Waiting for game to start</p>
+                {(this.state.isHost || true) && <Button onClick={this.startGame.bind(this)}>Start game</Button>}
+                </>
+            );
+        } else { // game is over
+            return (
+                <>
+                <p className="description">Game Over</p>
+                </>
+            );
+        }
      }
 
      render() {
          return (
+            <PageWrapper>
+            <Auth attemptSignIn={true}>
+            <Drawer anchor="right">
+
+            </Drawer>
+            {this.state.gameStarted &&
             <>
-                <ReactPlayer url={testUrl} playing={this.state.playing} />
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    startIcon={<PlayArrowIcon />}
-                    onClick={() => this.setState({playing: !this.state.playing})}
-                >
-                PLAY
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    onClick={() => {this.updatePlayer({ 'id': 'id1', 'score': 1})}}
-                >
-                Dom Dolla +1
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    onClick={() => {this.updatePlayer({ 'id': 'id2', 'score': 1})}}
-                >
-                Sonny Fodera +1
-                </Button>
-                <Leaderboard leaderboard={this.state.leaderboard} />
-            </>
+            <p className="description">Game started!!!</p>
+            <p className="description">{this.state.countdownMessage}</p>
+            </>}
+            
+            {this.getContent()}
+
+            </Auth>
+            </PageWrapper>
          )
      }
  }
+
+ export async function getServerSideProps(context) {
+    return {
+      props: {}, // will be passed to the page component as props
+    }
+  }
