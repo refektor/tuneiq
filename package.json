@@ -17,6 +17,7 @@
     "enzyme-to-json": "^3.4.4",
     "firebase": "^7.14.2",
     "firebase-admin": "^8.11.0",
+    "js-base64": "^2.5.2",
     "next": "9.3.5",
     "password-hash": "^1.2.2",
     "react": "16.13.1",
