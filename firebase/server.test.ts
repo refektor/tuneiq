@@ -1,17 +1,25 @@
 
-import { createGame } from './server';
-
-describe("server", () => {
+import * as server from './server';
+import {getFirebaseApp} from "./firebase";
 
 jest.mock('./firebase', () => {
-    return {};
-})
+    return {
+        getFirebaseApp: jest.fn()
+    }
+});
 
 describe("createGame", () => {
     it("create game successfully", () => {
-        const gameId = createGame("name", "pass", { genre: "Hip Hop" })
-        expect(gameId).toEqual("gameId");
-    });
-});
+        // GIVEN
+        //jest.spyOn(server, 'db');
+        //mockAdd.mockReturnValue()
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    add: () => {return 'yo'}
+                })
+            })
+        })
 
+    });
 });
