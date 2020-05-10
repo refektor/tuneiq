@@ -1,46 +1,9 @@
 import React from 'react';
 import { Grid, Box, Button, Typography, makeStyles } from '@material-ui/core';
 import Skeleton from '@material-ui/lab/Skeleton';
+import { getPossibleGenres } from '../firebase/server';
 
-// TODO: fetch from cloud function
-const data = [
-  {
-    src:
-      'https://i.ytimg.com/vi/pLqipJNItIo/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLBkklsyaw9FxDmMKapyBYCn9tbPNQ',
-    genre: 'tech house',
-    //times_played: '130', //future feature?
-  },
-  {
-    src:
-      'https://i.ytimg.com/vi/_Uu12zY01ts/hqdefault.jpg?sqp=-oaymwEZCPYBEIoBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCpX6Jan2rxrCAZxJYDXppTP4MoQA',
-    genre: 'disco',
-  },
-  {
-    src:
-      'https://i.ytimg.com/vi/kkLk2XWMBf8/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLB4GZTFu1Ju2EPPPXnhMZtFVvYBaw',
-    genre: 'rap',
-  },
-  {
-    src:
-      'https://i.ytimg.com/vi/_Uu12zY01ts/hqdefault.jpg?sqp=-oaymwEZCPYBEIoBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCpX6Jan2rxrCAZxJYDXppTP4MoQA',
-    genre: 'pop',
-  },
-  {
-    src:
-      'https://i.ytimg.com/vi/kkLk2XWMBf8/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLB4GZTFu1Ju2EPPPXnhMZtFVvYBaw',
-    genre: 'rock',
-  },
-  {
-    src:
-      'https://i.ytimg.com/vi/_Uu12zY01ts/hqdefault.jpg?sqp=-oaymwEZCPYBEIoBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCpX6Jan2rxrCAZxJYDXppTP4MoQA',
-    genre: 'classical',
-  },
-  {
-    src:
-      'https://i.ytimg.com/vi/kkLk2XWMBf8/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLB4GZTFu1Ju2EPPPXnhMZtFVvYBaw',
-    genre: 'alternative',
-  },
-];
+const data = getPossibleGenres();
 
 const useStyles = makeStyles((theme) => ({
     wrapper: {
@@ -65,7 +28,7 @@ export default function GenrePicker({ onPicked }) {
     return (
         <Box overflow="hidden">
             <Grid container>
-            {Array.from(data.map((item, index) => (
+            {data && data.map((item, index) => (
                 <Box key={index} className={classes.wrapper} maxWidth="md" >
                     {item ? (
                         <Box key={index} className={classes.item}>
@@ -73,7 +36,7 @@ export default function GenrePicker({ onPicked }) {
                                 <img 
                                     style={{ width: 75, height: 75}}
                                     alt={item.genre} 
-                                    src={item.src}
+                                    src={item.img}
                                     onClick={() => onPicked(item.genre)} />
                             </Button>
                             <Typography key={index} className={classes.text} variant="caption" color="textSecondary">
@@ -84,7 +47,7 @@ export default function GenrePicker({ onPicked }) {
                         <Skeleton variant="rect" />
                     )}
                 </Box>
-            )))}
+            ))}
             </Grid>
         </Box>
   );

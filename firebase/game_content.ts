@@ -1,5 +1,5 @@
 import * as axios from 'axios';
-import * as base64 from 'js-base64'
+import * as base64 from 'js-base64';
 
 // Types -- TODO: find a better place to put these
 export type GameDetails = {
@@ -49,6 +49,25 @@ type SpotifyTrack = {
 }
 
 // Functions
+export function generateGameContentStub(gameGenre: string, hostId: string, hostName: string, gameName: string, password: string) {
+    return {
+        hostId: hostId,
+        name: gameName,
+        password: password,
+        genre: gameGenre,
+        rounds: null,
+        intermissionDuration: NaN,
+        roundDuration: NaN,
+        startTime: null,
+        leaderBoard: {
+            [hostId]: {
+                name: hostName,
+                score: 0
+            }
+        }
+    }
+}
+
 export function generateGameContent(gameGenre: string, hostId: string, hostName: string, gameName: string, password: string) {
     const gameRounds: number = Number(5)
     const optionsPerRound: number = Number(4)
@@ -141,11 +160,12 @@ function getRoundDetails(gameGenre: string, gameRounds: number, optionsPerRound:
 }
 
 function getSpotifyToken() {
-    const spotifyTokenEndpoint = 'https://accounts.spotify.com/api/token'
+    const spotifyTokenEndpoint = 'https://accounts.spotify.com/api/token';
     //TODO: hide these values
-    const clientId = "dd1bbbf5a2994eebb4777fa4e3315fcf"
-    const clientSecret = "cbba1e3afe3648419d6609ef57285ecd"
-    const authorization64 = base64.Base64.encode(`${clientId}:${clientSecret}`)
+    const clientId = "dd1bbbf5a2994eebb4777fa4e3315fcf";
+    const clientSecret = "cbba1e3afe3648419d6609ef57285ecd";
+    const authorization64 = base64.Base64.encode(`${clientId}:${clientSecret}`);
+
     const spotifyTokenRequestConfig: axios.AxiosRequestConfig = {
         url: spotifyTokenEndpoint,
         method: 'post',
@@ -153,12 +173,12 @@ function getSpotifyToken() {
             "Content-Type": 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${authorization64}`
         },
-
         params:
         {
             grant_type: 'client_credentials'
         }
     }
+
     return axios.default(spotifyTokenRequestConfig).then((response) => {
         return response.data.access_token
     }).catch((error) => {
