@@ -8,8 +8,9 @@ import { Component } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
-import FirebaseApp from '../firebase/firebase';
+import {getFirebaseApp} from '../firebase/firebase';
 
+const FirebaseApp = getFirebaseApp();
 
 interface IProps {
     onSuccess?: any;
