@@ -2,7 +2,7 @@ import { getFirebaseApp } from './firebase'
 import { generateGameContent, generateGameContentStub, GameDetails } from './game_content'
 
 function createGame(gameName: string, gamePassword: string, gameGenre: string, hostName: string, hostId: string) {
-    doesGameNameExist(gameName).then((_) => {
+    return doesGameNameExist(gameName).then((_) => {
         console.log('game name does not exist, creating new game')
         const gameContent = generateGameContentStub(gameGenre, hostId, hostName, gameName, gamePassword);
         return getFirebaseApp().firestore().collection("games")
