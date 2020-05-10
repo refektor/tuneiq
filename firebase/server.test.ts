@@ -1,8 +1,6 @@
 
 import * as server from './server';
-import {getFirebaseApp} from "./firebase";
-import { resolve } from 'dns';
-
+import { getFirebaseApp } from "./firebase";
 
 jest.mock('./firebase', () => {
     return {
@@ -10,42 +8,42 @@ jest.mock('./firebase', () => {
     }
 });
 
-
-
-describe("createGame", () => {
-    it("create game successfully", () => {
-        // GIVEN
-        //jest.spyOn(server, 'db');
-        //mockAdd.mockReturnValue()
-        (getFirebaseApp as jest.Mock).mockReturnValue({
-            firestore: () => ({
-                collection: () => ({
-                    add: () => {return 'yo'}
-                })
-            })
-        })
-
-    });
-});
-
+jest.mock('./game_content', () => {
+    return {
+        generateGameContent: jest.fn()
+    }
+})
 
 describe("joinGame", () => {
-    it("joins game successfully", () => {
-        // GIVEN
-        //jest.spyOn(server, 'db');
-        //mockAdd.mockReturnValue()
-        /*
+
+
+    /**
+     * tests player joining a game
+     */
+    it('join game successfully', () => {
+
+        const expectedGameId = { id: 'g0000001' };
+        const mockGet = jest.fn().mockResolvedValue({ empty: true });
+        const mockUpdate = jest.fn().mockResolvedValue(expectedGameId);
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
-                    add: () => {return 'yo'}
+                    where: () => ({
+                        get: mockGet
+                    }),
+                    update: mockUpdate,
                 })
             })
-        })*/
-        return server.joinGame("7iFDy0vaJnbxW3pYPgtu", "rCBxuA6zypN5PriubHjB", "dombresky").then(data => {
-            console.log(data);
-          }).catch(error => {
-            console.log(error);
-          });
-    });
+        });
+        const gameId = expectedGameId.id;
+        const playerId = 'p0000001';
+        const playerName = 'fekaroniAndCheese';
+
+        /*
+        return server.joinGame(gameId, playerId, playerName).then(res => {
+            expect(mockUpdate).toHaveBeenCalledWith(expectedGameDetails)
+            expect(res).toEqual(expectedGameId.id)
+        })
+        */
+    })
 });
