@@ -1,6 +1,8 @@
 import { getFirebaseApp } from './firebase'
 import { generateGameContent, generateGameContentStub, GameDetails } from './game_content'
 
+const MAX_PLAYERS_PER_GAME = 4
+
 function createGame(gameName: string, gamePassword: string, gameGenre: string, hostName: string, hostId: string) {
     return doesGameNameExist(gameName).then((_) => {
         console.log('game name does not exist, creating new game')
@@ -195,8 +197,30 @@ function getPossibleGenres() {
         });
 }
 
-function joinGame(gameName: string, gamePassword: string) {
-    return "gameId";
+
+function joinGame(gameId: string, playerId: string, playerName: string) {
+    return getFirebaseApp().firestore().collection("games").doc(gameId).get().then((game) => {
+        if (!game.exists){
+            return Promise.reject(`Cannot find game with id ${gameId}.`)
+        }
+        const gameData = game.data();
+        const leaderBoard = gameData.leaderBoard;
+        if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME){
+            return Promise.reject(`Game ${gameId} is full`);
+        }
+        else if(playerId in leaderBoard){
+            return Promise.reject(`Player ${playerId} has already joined game ${gameId}.`);
+        }
+        else{
+            leaderBoard[playerId] = {"name": playerName, "score": 0}
+            getFirebaseApp().firestore().collection("games")
+            .doc(gameId)
+            .update({ 'leaderBoard' : leaderBoard });
+            return gameId;
+        }
+        }).catch((error) => {
+            return error;
+        });
 }
 
 function startGame(gameId: string): void {
