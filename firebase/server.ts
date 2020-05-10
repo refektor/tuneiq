@@ -207,8 +207,29 @@ function leaveGame(gameId: string, userId: string): void {
     return;
 }
 
-function increasePlayerScore(gameId: string, userId: string, timeSinceRoundStart: number): void {
-    return;
+// Returns the updated score
+function increasePlayerScore(gameId: string, userId: string, percentRoundComplete: number): Promise<number> {
+    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId)
+    return getFirebaseApp().firestore().runTransaction((transaction) => {
+        return transaction.get(gameDocRef).then(gameDoc => {
+            if (!gameDoc.exists) {
+                return Promise.reject(`Game Id: ${gameId} is invalid`)
+            }
+
+            if (!gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
+                return Promise.reject(`User Id: ${userId} is invalid`)
+            }
+            const newScore = (100 * percentRoundComplete) + gameDoc.data().leaderBoard[userId].score;
+            transaction.update(gameDocRef, {
+                [`leaderBoard.${userId}.score`]: newScore
+            });
+            return newScore
+        })
+    }).then(response => {
+        return response
+    }).catch(error => {
+        return error
+    })
 }
 
 export {

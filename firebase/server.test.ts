@@ -126,3 +126,47 @@ describe("createGame", () => {
         })
     })
 });
+
+// TODO: Add more tests for this function. No test coverage currently for inner lambda function
+describe("increasePlayerScore", () => {
+    it("successfully updated score", () => {
+        const userId = "123Dave";
+        const gameId = "davesFancyGame";
+        const expectedScore = 200;
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => {
+                        return "docRef"
+                    }
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedScore)
+            }),
+
+        });
+
+        return server.increasePlayerScore(gameId, userId, 10).then(score => {
+            expect(score).toEqual(expectedScore)
+        })
+    });
+    it("Fails to updateScore due to transaction error", () => {
+        const userId = "123Dave";
+        const gameId = "davesFancyGame";
+        const expectedErrorMessage = "Transaction Error";
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => {
+                        return "docRef"
+                    }
+                }),
+                runTransaction: jest.fn().mockResolvedValue(new Error(expectedErrorMessage))
+            }),
+
+        });
+
+        return server.increasePlayerScore(gameId, userId, 10).catch(error => {
+            expect(error).toEqual(expectedErrorMessage)
+        })
+    })
+})
