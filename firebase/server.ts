@@ -226,6 +226,10 @@ function joinGame(gameId: string, playerId: string, playerName: string) {
 }
 
 function startGame(gameId: string): void {
+    const startTime = new Date().getTime() + 5000; // 5 seconds
+    getFirebaseApp().firestore().collection("games")
+                .doc(gameId)
+                .update({ startTime })
     return;
 }
 
@@ -234,8 +238,8 @@ function leaveGame(gameId: string, userId: string): void {
 }
 
 // Returns the updated score
-function increasePlayerScore(gameId: string, userId: string, percentRoundComplete: number): Promise<number> {
-    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId)
+function increasePlayerScore(gameId: string, userId: string, pctRoundRemaining: number): Promise<number> {
+    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
     return getFirebaseApp().firestore().runTransaction((transaction) => {
         return transaction.get(gameDocRef).then(gameDoc => {
             if (!gameDoc.exists) {
@@ -245,7 +249,7 @@ function increasePlayerScore(gameId: string, userId: string, percentRoundComplet
             if (!gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
                 return Promise.reject(`User Id: ${userId} is invalid`)
             }
-            const newScore = (100 * percentRoundComplete) + gameDoc.data().leaderBoard[userId].score;
+            const newScore = Math.ceil((100 * pctRoundRemaining) + gameDoc.data().leaderBoard[userId].score);
             transaction.update(gameDocRef, {
                 [`leaderBoard.${userId}.score`]: newScore
             });
