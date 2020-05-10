@@ -160,15 +160,15 @@ function getRoundDetails(gameGenre: string, gameRounds: number, optionsPerRound:
 }
 
 function getSpotifyToken() {
-    const tokenEndpoint = 'https://accounts.spotify.com/api/token';
+    const spotifyTokenEndpoint = 'https://accounts.spotify.com/api/token';
     //TODO: hide these values
     const clientId = "dd1bbbf5a2994eebb4777fa4e3315fcf";
     const clientSecret = "cbba1e3afe3648419d6609ef57285ecd";
     const authorization64 = base64.Base64.encode(`${clientId}:${clientSecret}`);
 
     const spotifyTokenRequestConfig: axios.AxiosRequestConfig = {
-        url: tokenEndpoint,
-        method: 'get',
+        url: spotifyTokenEndpoint,
+        method: 'post',
         headers: {
             "Content-Type": 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${authorization64}`
