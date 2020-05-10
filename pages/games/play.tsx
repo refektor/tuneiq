@@ -8,6 +8,7 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import {getFirebaseApp} from '../../firebase/firebase';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
+import AnswerList from '../../components/answers';
 import Leaderboard from '../../components/leaderboard';
 import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 
@@ -178,6 +179,7 @@ class PlayGame extends Component<Props, State> {
                 <img src="/music-gif.gif"/>
                 <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
                 <p className="description">What is the name of this tune?</p>
+                <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
                 </>
                 }
                 </>
