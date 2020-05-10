@@ -316,4 +316,4 @@ describe("increasePlayerScore", () => {
             expect(error).toEqual(expectedErrorMessage)
         })
     })
-})
+});
