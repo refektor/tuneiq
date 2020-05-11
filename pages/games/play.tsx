@@ -96,7 +96,7 @@ class PlayGame extends Component<Props, State> {
      }
 
      startGameClicked() {
-         server.startGame(/*this.props.gameId*/this.props.gameId);
+         server.startGame(this.props.gameId);
      }
 
      startGame(startTime: number) {

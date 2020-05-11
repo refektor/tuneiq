@@ -202,18 +202,21 @@ function getPossibleGenres() {
 function attemptToJoinGame(gameName: string, gamePassword: string, playerId: string, playerName: string) {
     return getFirebaseApp().firestore().collection("games")
         .where("name", "==", gameName)
-        //.where("password", "==", gamePassword)
         .get().then((games) => {
             console.log(games)
             const gameId = games.docs[0].id;
             console.log(games.docs[0].data());
-            return joinGame(gameId, playerId, playerName);
-        });
+            if (gamePassword === games.docs[0].data().password) {
+                return joinGame(gameId, playerId, playerName);
+            } else {
+                return Promise.reject({ field: "password", message: "Invalid password."});
+            }
+            
+        }).catch((err) => (Promise.reject({field: "gameName", message: "Game does not exist."})));
 }
 
 
 function joinGame(gameId: string, playerId: string, playerName: string) {
-    console.log('heree', gameId)
     return getFirebaseApp().firestore().collection("games").doc(gameId).get().then((game) => {
         if (!game.exists){
             return Promise.reject(`Cannot find game with id ${gameId}.`)

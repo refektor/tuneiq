@@ -15,11 +15,13 @@ export default function JoinGame() {
     const router = useRouter();
     const [nameLabel, setNameLabel] = useState("Name")
     const [nameError, setNameError] = useState(false);
+    const [passError, setPassError] = useState(false);
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
 
     function handleNameChange(e) {
         setName(e.target.value);
+        setNameError(false);
     }
 
     function joinGame() {
@@ -33,8 +35,19 @@ export default function JoinGame() {
                     gameId: gameId
                 }
             })
+        }).catch((err) => {
+            if (err.field === "gameName") {
+                setNameError(true)
+            } else {
+                setPassError(true);
+            }
         });
 
+    }
+
+    function handlePasswordChange(e) {
+        setPassword(e.target.value);
+        setPassError(false);
     }
 
     return (
@@ -56,7 +69,8 @@ export default function JoinGame() {
             autoComplete="off"
             className={classes.inputChild} 
             value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
+            error={passError} 
+            onChange={handlePasswordChange} 
           />
           <Button
             variant="contained"
