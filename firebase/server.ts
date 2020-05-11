@@ -190,13 +190,29 @@ function getPossibleGenres() {
     }
 
     return genres['genres']
-        .filter((genre) => { return genre === "classical" || genre === "dance" || genre === "guitar" || genre === "latin" || genre === "reggae" || genre === "techno" })
+        .filter((genre) => { return genre === "house" || genre === "dance" || genre === "hip-hop" || genre === "latin" || genre === "reggae" || genre === "techno" })
         .map((genre) => {
             return {
                 genre: genre,
                 img: `../${genre}.jpg`
             }
         });
+}
+
+function attemptToJoinGame(gameName: string, gamePassword: string, playerId: string, playerName: string) {
+    return getFirebaseApp().firestore().collection("games")
+        .where("name", "==", gameName)
+        .get().then((games) => {
+            console.log(games)
+            const gameId = games.docs[0].id;
+            console.log(games.docs[0].data());
+            if (gamePassword === games.docs[0].data().password) {
+                return joinGame(gameId, playerId, playerName);
+            } else {
+                return Promise.reject({ field: "password", message: "Invalid password."});
+            }
+            
+        }).catch((err) => (Promise.reject({field: "gameName", message: "Game does not exist."})));
 }
 
 
@@ -226,6 +242,10 @@ function joinGame(gameId: string, playerId: string, playerName: string) {
 }
 
 function startGame(gameId: string): void {
+    const startTime = new Date().getTime() + 5000; // 5 seconds
+    getFirebaseApp().firestore().collection("games")
+                .doc(gameId)
+                .update({ startTime })
     return;
 }
 
@@ -234,8 +254,8 @@ function leaveGame(gameId: string, userId: string): void {
 }
 
 // Returns the updated score
-function increasePlayerScore(gameId: string, userId: string, percentRoundComplete: number): Promise<number> {
-    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId)
+function increasePlayerScore(gameId: string, userId: string, pctRoundRemaining: number): Promise<number> {
+    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
     return getFirebaseApp().firestore().runTransaction((transaction) => {
         return transaction.get(gameDocRef).then(gameDoc => {
             if (!gameDoc.exists) {
@@ -245,7 +265,7 @@ function increasePlayerScore(gameId: string, userId: string, percentRoundComplet
             if (!gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
                 return Promise.reject(`User Id: ${userId} is invalid`)
             }
-            const newScore = (100 * percentRoundComplete) + gameDoc.data().leaderBoard[userId].score;
+            const newScore = Math.ceil((100 * pctRoundRemaining) + gameDoc.data().leaderBoard[userId].score);
             transaction.update(gameDocRef, {
                 [`leaderBoard.${userId}.score`]: newScore
             });
@@ -262,6 +282,7 @@ export {
     doesGameNameExist,
     getPossibleGenres,
     createGame,
+    attemptToJoinGame,
     joinGame,
     startGame,
     leaveGame,

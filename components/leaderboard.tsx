@@ -26,7 +26,7 @@ const useStyles = makeStyles((theme) => ({
 export default function Leaderboard({ leaderboard }) {
     const classes = useStyles();
     if (leaderboard) {
-        leaderboard.sort((a,b) => {return a.score < b.score});
+        leaderboard.sort((a,b) => {return b.score - a.score });
     }
 
     return (
