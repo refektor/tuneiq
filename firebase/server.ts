@@ -190,7 +190,7 @@ function getPossibleGenres() {
     }
 
     return genres['genres']
-        .filter((genre) => { return genre === "classical" || genre === "dance" || genre === "guitar" || genre === "latin" || genre === "reggae" || genre === "techno" })
+        .filter((genre) => { return genre === "house" || genre === "dance" || genre === "hip-hop" || genre === "latin" || genre === "reggae" || genre === "techno" })
         .map((genre) => {
             return {
                 genre: genre,
