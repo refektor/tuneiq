@@ -182,7 +182,7 @@ class PlayGame extends Component<Props, State> {
         const roundDuration = this.state.roundDuration;
         const pctRoundRemaining = remainingTime / roundDuration;
 
-        server.increasePlayerScore(this.props.gameId, "22222", pctRoundRemaining);
+        server.increasePlayerScore(this.props.gameId, FirebaseApp.auth().currentUser.uid, pctRoundRemaining);
      }
 
      getContent() {
@@ -204,7 +204,7 @@ class PlayGame extends Component<Props, State> {
             return (
                 <>
                 <p className="description">Waiting for game to start</p>
-                {(this.state.isHost || true) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
+                {(this.state.isHost) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
                 </>
             );
         } else { // game is over
@@ -240,6 +240,6 @@ class PlayGame extends Component<Props, State> {
 
  export async function getServerSideProps(context) {
     return {
-      props: {gameId: "7iFDy0vaJnbxW3pYPgtu"}, // will be passed to the page component as props
+      props: {gameId: context.query.gameId}, // will be passed to the page component as props
     }
   }
