@@ -3,7 +3,6 @@ import axios from 'axios'
 import { getFirebaseApp } from './firebase'
 import { availableGenres } from './available_genres'
 
-
 const MAX_PLAYERS_PER_GAME = 4
 
 function createGame(gameName: string, gamePassword: string, gameGenre: string, hostName: string, hostId: string) {
@@ -138,6 +137,13 @@ function deleteGame(gameId: string): Promise<string> {
     })
 }
 
+/*
+* TODO: Decide on and implement more end game logic. For now, simply delete the game.
+*/
+function endGame(gameId: string): Promise<string> {
+    return deleteGame(gameId);
+}
+
 function leaveGame(gameId: string, userId: string): void {
     return;
 }
@@ -175,6 +181,7 @@ export {
     joinGame,
     startGame,
     deleteGame,
+    endGame,
     leaveGame,
     increasePlayerScore,
 };
