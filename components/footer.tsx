@@ -1,7 +1,26 @@
-import { Container } from '@material-ui/core'
+import { Container, Typography, makeStyles } from '@material-ui/core'
+import GitHubIcon from '@material-ui/icons/GitHub';
+
+//TODO: make this footer's border the same colour as main somehow
+const useStyles = makeStyles((theme) => ({
+    footer: {
+        border: 0
+    },
+
+    container: {
+        borderTop: 1,
+        borderColor: 'text.main'
+    },
+
+    icon: {
+        margin: theme.spacing(0, 2)
+    }
+}));
+
+const text = "Check us out";
 
 export default function Footer() {
-    const text = "Check us out";
+    const classes = useStyles();
 
     return (
         <Container>
@@ -11,7 +30,10 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    {text} <img src="/Github-Mark-32px.png" />
+                <Typography variant="overline">
+                    {text}
+                </Typography>
+                <GitHubIcon className={classes.icon} />
                 </a>
             </footer>
         </Container>); 

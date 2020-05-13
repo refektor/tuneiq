@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router'
-import { Container, TextField, Button } from '@material-ui/core';
+import { Container, TextField, Fab } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import * as hash from 'password-hash';
 import{ getFirebaseApp } from '../../firebase/firebase';
@@ -107,26 +107,26 @@ function CreateGame({ player }) {
                 onChange={handlePasswordChange} 
               />
               <GenrePicker onPicked={handleGenreChange} />
-              <Button
-                variant="contained"
+              <Fab
+                variant="extended"
                 color="primary"
                 size="large"
                 disabled={buttonDisabled}
                 className={classes.button}
-                startIcon={<PlayArrowIcon />}
                 onClick={handleCreateGame}
               >
-                CREATE
-              </Button>
-              <Button
-                variant="contained"
+                <PlayArrowIcon />
+                PLAY
+              </Fab>
+              <Fab
+                variant="extended"
                 color="primary"
                 size="large"
                 className={classes.button}
                 href={authUrl}
               >
                   Spotify
-              </Button>
+              </Fab>
             </Container>
           </PageWrapper>
         </Auth>
