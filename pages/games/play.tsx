@@ -78,7 +78,6 @@ class PlayGame extends Component<Props, State> {
      }
 
      handleGameUpdate(gameObj): void {
-        console.log(gameObj);
         const isHost: boolean = gameObj.hostId === FirebaseApp.auth().currentUser?.uid;
         const leaderboard = Object.keys(gameObj.leaderBoard).map((id,index) => {
             return { 'name': gameObj.leaderBoard[id].name, 'score': gameObj.leaderBoard[id].score }
@@ -90,7 +89,7 @@ class PlayGame extends Component<Props, State> {
             leaderboard
         })
 
-        if (gameObj.startTime) {
+        if (!this.state.gameStarted && gameObj.startTime) {
             this.startGame(gameObj.startTime);
         }
      }
@@ -139,7 +138,7 @@ class PlayGame extends Component<Props, State> {
                 if (timingEvents.length === 0) {
                     // end game!
                     clearInterval(interval);
-                    this.setState({gameEnded: true, gameStarted: false})
+                    this.setState({gameEnded: true})
                     return;
                 }
                 // change display (start/end round)
@@ -186,7 +185,13 @@ class PlayGame extends Component<Props, State> {
      }
 
      getContent() {
-        if (this.state.gameStarted) {
+        if (this.state.gameEnded) {
+            return (
+                <>
+                <p className="description">Game Over</p>
+                </>
+            );
+        } else if (this.state.gameStarted) {
             return (
                 <>
                 {
@@ -200,17 +205,11 @@ class PlayGame extends Component<Props, State> {
                 }
                 </>
             )
-        } else if (!this.state.gameEnded) { // waiting for game to start
+        } else { // waiting for game to start
             return (
                 <>
                 <p className="description">Waiting for game to start</p>
                 {(this.state.isHost) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
-                </>
-            );
-        } else { // game is over
-            return (
-                <>
-                <p className="description">Game Over</p>
                 </>
             );
         }
@@ -222,7 +221,7 @@ class PlayGame extends Component<Props, State> {
             <PageWrapper>
             <Auth attemptSignIn={true}>
             <Leaderboard leaderboard={this.state.leaderboard} />
-            {this.state.gameStarted &&
+            {this.state.gameStarted && !this.state.gameEnded &&
             <>
             <p className="description">Game started!!!</p>
             <p className="description">{this.state.countdownMessage}</p>
