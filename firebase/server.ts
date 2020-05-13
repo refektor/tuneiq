@@ -1,5 +1,8 @@
-import * as axios from 'axios';
+import { AxiosRequestConfig } from 'axios';
+import axios from 'axios'
 import { getFirebaseApp } from './firebase'
+import { availableGenres } from './available_genres'
+
 
 const MAX_PLAYERS_PER_GAME = 4
 
@@ -7,7 +10,7 @@ function createGame(gameName: string, gamePassword: string, gameGenre: string, h
     return doesGameNameExist(gameName).then((_) => {
         console.log('game name does not exist, creating new game')
         const ganerateGameContentEndPoint = "https://us-central1-tuneiq.cloudfunctions.net/generateGameContent"
-        const generateGameContentConfig: axios.AxiosRequestConfig = {
+        const generateGameContentConfig: AxiosRequestConfig = {
             url: ganerateGameContentEndPoint,
             method: 'post',
             params:
@@ -20,7 +23,7 @@ function createGame(gameName: string, gamePassword: string, gameGenre: string, h
             }
         };
 
-        return axios.default(generateGameContentConfig).then(gameDetails => {
+        return axios.request(generateGameContentConfig).then(gameDetails => {
             console.log(gameDetails.data)
             return getFirebaseApp().firestore().collection("games")
                 .add(gameDetails.data)
@@ -31,7 +34,7 @@ function createGame(gameName: string, gamePassword: string, gameGenre: string, h
                 })
                 .catch((error) => {
                     console.log(error);
-                    return error
+                    return Promise.reject(error)
                 });
         }).catch(error => {
             return Promise.reject(error)
@@ -58,138 +61,7 @@ function doesGameNameExist(name) {
 
 function getPossibleGenres() {
     // TODO: replace with call to spotify api, endpoint: https://api.spotify.com/v1/recommendations/available-genre-seeds
-    const genres = {
-        "genres": [
-            "acoustic",
-            "afrobeat",
-            "alt-rock",
-            "alternative",
-            "ambient",
-            "anime",
-            "black-metal",
-            "bluegrass",
-            "blues",
-            "bossanova",
-            "brazil",
-            "breakbeat",
-            "british",
-            "cantopop",
-            "chicago-house",
-            "children",
-            "chill",
-            "classical",
-            "club",
-            "comedy",
-            "country",
-            "dance",
-            "dancehall",
-            "death-metal",
-            "deep-house",
-            "detroit-techno",
-            "disco",
-            "disney",
-            "drum-and-bass",
-            "dub",
-            "dubstep",
-            "edm",
-            "electro",
-            "electronic",
-            "emo",
-            "folk",
-            "forro",
-            "french",
-            "funk",
-            "garage",
-            "german",
-            "gospel",
-            "goth",
-            "grindcore",
-            "groove",
-            "grunge",
-            "guitar",
-            "happy",
-            "hard-rock",
-            "hardcore",
-            "hardstyle",
-            "heavy-metal",
-            "hip-hop",
-            "holidays",
-            "honky-tonk",
-            "house",
-            "idm",
-            "indian",
-            "indie",
-            "indie-pop",
-            "industrial",
-            "iranian",
-            "j-dance",
-            "j-idol",
-            "j-pop",
-            "j-rock",
-            "jazz",
-            "k-pop",
-            "kids",
-            "latin",
-            "latino",
-            "malay",
-            "mandopop",
-            "metal",
-            "metal-misc",
-            "metalcore",
-            "minimal-techno",
-            "movies",
-            "mpb",
-            "new-age",
-            "new-release",
-            "opera",
-            "pagode",
-            "party",
-            "philippines-opm",
-            "piano",
-            "pop",
-            "pop-film",
-            "post-dubstep",
-            "power-pop",
-            "progressive-house",
-            "psych-rock",
-            "punk",
-            "punk-rock",
-            "r-n-b",
-            "rainy-day",
-            "reggae",
-            "reggaeton",
-            "road-trip",
-            "rock",
-            "rock-n-roll",
-            "rockabilly",
-            "romance",
-            "sad",
-            "salsa",
-            "samba",
-            "sertanejo",
-            "show-tunes",
-            "singer-songwriter",
-            "ska",
-            "sleep",
-            "songwriter",
-            "soul",
-            "soundtracks",
-            "spanish",
-            "study",
-            "summer",
-            "swedish",
-            "synth-pop",
-            "tango",
-            "techno",
-            "trance",
-            "trip-hop",
-            "turkish",
-            "work-out",
-            "world-music"
-        ]
-    }
-
-    return genres['genres']
+    return availableGenres['genres']
         .filter((genre) => { return genre === "house" || genre === "dance" || genre === "hip-hop" || genre === "latin" || genre === "reggae" || genre === "techno" })
         .map((genre) => {
             return {
@@ -209,43 +81,43 @@ function attemptToJoinGame(gameName: string, gamePassword: string, playerId: str
             if (gamePassword === games.docs[0].data().password) {
                 return joinGame(gameId, playerId, playerName);
             } else {
-                return Promise.reject({ field: "password", message: "Invalid password."});
+                return Promise.reject({ field: "password", message: "Invalid password." });
             }
-            
-        }).catch((err) => (Promise.reject({field: "gameName", message: "Game does not exist."})));
+
+        }).catch((err) => (Promise.reject({ field: "gameName", message: "Game does not exist." })));
 }
 
 
 function joinGame(gameId: string, playerId: string, playerName: string) {
     return getFirebaseApp().firestore().collection("games").doc(gameId).get().then((game) => {
-        if (!game.exists){
+        if (!game.exists) {
             return Promise.reject(`Cannot find game with id ${gameId}.`)
         }
         const gameData = game.data();
         const leaderBoard = gameData.leaderBoard;
-        if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME){
+        if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME) {
             return Promise.reject(`Game ${gameId} is full`);
         }
-        else if(playerId in leaderBoard){
+        else if (playerId in leaderBoard) {
             return Promise.reject(`Player ${playerId} has already joined game ${gameId}.`);
         }
-        else{
-            leaderBoard[playerId] = {"name": playerName, "score": 0}
+        else {
+            leaderBoard[playerId] = { "name": playerName, "score": 0 }
             getFirebaseApp().firestore().collection("games")
-            .doc(gameId)
-            .update({ 'leaderBoard' : leaderBoard });
+                .doc(gameId)
+                .update({ 'leaderBoard': leaderBoard });
             return gameId;
         }
-        }).catch((error) => {
-            return error;
-        });
+    }).catch((error) => {
+        return error;
+    });
 }
 
 function startGame(gameId: string): void {
     const startTime = new Date().getTime() + 5000; // 5 seconds
     getFirebaseApp().firestore().collection("games")
-                .doc(gameId)
-                .update({ startTime })
+        .doc(gameId)
+        .update({ startTime })
     return;
 }
 
