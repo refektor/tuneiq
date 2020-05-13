@@ -121,6 +121,23 @@ function startGame(gameId: string): void {
     return;
 }
 
+function deleteGame(gameId: string): Promise<string> {
+    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
+    return getFirebaseApp().firestore().runTransaction((transaction) => {
+        return transaction.get(gameDocRef).then(gameDoc => {
+            if (!gameDoc.exists) {
+                return Promise.reject(`Game Id: ${gameId} is invalid.`)
+            }
+            transaction.delete(gameDocRef);
+            return `Game ${gameId} was deleted.`
+        })
+    }).then((response) => {
+        return response;
+    }).catch((error) => {
+        return error;
+    })
+}
+
 function leaveGame(gameId: string, userId: string): void {
     return;
 }
@@ -157,6 +174,7 @@ export {
     attemptToJoinGame,
     joinGame,
     startGame,
+    deleteGame,
     leaveGame,
     increasePlayerScore,
 };

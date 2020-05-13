@@ -328,3 +328,66 @@ describe("increasePlayerScore", () => {
         })
     })
 });
+
+
+describe("deleteGame", () => {
+
+    it('delete game successfully', () => {
+        const gameData = {
+            id: 'g001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 0}
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const expectedDeleteResponse = `Game ${expectedGameId} was deleted.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedDeleteResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.deleteGame(gameId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedDeleteResponse);
+            });
+    });
+
+    it('could not find game to delete', () => {
+        const returnedGame = {
+            exists: false
+        }
+        const expectedGameId = { id: 'g001' };
+        const expectedDeleteResponse = `Game Id: ${expectedGameId.id} is invalid.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedDeleteResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.deleteGame(gameId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedDeleteResponse);
+            });
+    });
+});
