@@ -186,7 +186,9 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
     })
 }
 
-// Returns the updated score
+/*
+/ Returns the updated score
+*/
 function increasePlayerScore(gameId: string, userId: string, pctRoundRemaining: number): Promise<number> {
     const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
     return getFirebaseApp().firestore().runTransaction((transaction) => {
@@ -211,6 +213,24 @@ function increasePlayerScore(gameId: string, userId: string, pctRoundRemaining: 
     })
 }
 
+function isUserInGame(gameId: string, userId: string): Promise<boolean> {
+    return getFirebaseApp().firestore().collection("games")
+        .doc(gameId)
+        .get()
+        .then(gameDoc => {
+            if (!gameDoc.exists) {
+                return Promise.reject(`Game Id: ${gameId} is invalid`)
+            }
+
+            if (gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
+                return true
+            }
+            return false
+        }).catch(error => {
+            return Promise.reject(error)
+        })
+}
+
 export {
     doesGameNameExist,
     getPossibleGenres,
@@ -222,4 +242,5 @@ export {
     endGame,
     leaveGame,
     increasePlayerScore,
+    isUserInGame
 };
