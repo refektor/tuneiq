@@ -1,24 +1,47 @@
 import * as server from './server';
 import { getFirebaseApp } from "./firebase";
-import { generateGameContent, GameDetails } from './game_content'
+import firebase from "firebase"
+import axios from 'axios';
+import { AxiosStatic } from 'axios'
 
-
+jest.mock('./firebase')
 jest.mock('./firebase', () => {
     return {
         getFirebaseApp: jest.fn()
     }
 });
 
+jest.mock('axios')
 
-jest.mock('./game_content', () => {
-    return {
-        generateGameContent: jest.fn()
-    }
-})
 
 describe("createGame", () => {
     it("successfully create game with valid params", () => {
         const expectedGameId = { id: "6969696969" }
+        const gameName = "daveEnjoysBubbleBaths"
+        const password = "dmon"
+        const hostId = "2323"
+        const hostName = "david"
+        const gameGenre = "classical"
+        const expectedGameDetails = {
+            name: gameName,
+            password: password,
+            hostId: hostId,
+            intermissionDuration: NaN,
+            roundDuration: NaN,
+            startTime: null,
+            genre: gameGenre,
+            rounds: [],
+            leaderBoard: {
+                [hostId]: {
+                    name: hostName,
+                    score: 0
+                }
+            }
+        };
+        const mockedAxios = axios as jest.Mocked<AxiosStatic>
+        const mockedAxiosReponse = {
+            data: expectedGameDetails
+        }
         const mockAdd = jest.fn().mockResolvedValue(expectedGameId);
         const mockGet = jest.fn().mockResolvedValue({ empty: true });
         (getFirebaseApp as jest.Mock).mockReturnValue({
@@ -31,29 +54,9 @@ describe("createGame", () => {
                 })
             })
         });
-        const gameName = "daveEnjoysBubbleBaths"
-        const password = "dmon"
-        const hostId = "2323"
-        const hostName = "david"
-        const gameGenre = "classical"
-        const expectedGameDetails: GameDetails = {
-            name: gameName,
-            password: password,
-            hostId: hostId,
-            intermissionDuration: NaN,
-            roundDuration: NaN,
-            startTime: null,
-            genre: gameGenre,
-            rounds: [],
-            leaderBoard: {
-                [hostId]: {
-                    name: hostName,
-                    score: 0
-                }
-            }
-        };
 
-        (generateGameContent as jest.Mock).mockResolvedValue(expectedGameDetails)
+
+        mockedAxios.request.mockResolvedValue(mockedAxiosReponse)
 
         return server.createGame(gameName, password, gameGenre, hostName, hostId).then(res => {
             expect(mockAdd).toHaveBeenCalledWith(expectedGameDetails)
@@ -62,7 +65,13 @@ describe("createGame", () => {
     });
 
     it("fails to create game with game name already exists error", () => {
-        const mockGet = jest.fn().mockResolvedValue({ empty: jest.fn().mockReturnValue(false) });
+        const gameName = "asssah";
+        const password = "dmon";
+        const hostId = "2323";
+        const hostName = "david";
+        const gameGenre = "classical";
+        const expectedMessage = `Game name: ${gameName}, already exists`;
+        const mockGet = jest.fn().mockResolvedValue({ empty: false });
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
@@ -72,38 +81,21 @@ describe("createGame", () => {
                 })
             })
         });
-        const gameName = "daveEnjoysBubbleBaths";
-        const password = "dmon";
-        const hostId = "2323";
-        const hostName = "david";
-        const gameGenre = "classical";
-        const expectedMessage = "Game name already exists"
+
         return server.createGame(gameName, password, gameGenre, hostName, hostId).catch(error => {
             expect(error).toEqual(expectedMessage)
         })
     });
 
     it("fails to create game with database writing error", () => {
-        const expectedErrorMessage = "Database Writing error"
-        const mockGet = jest.fn().mockResolvedValue({ empty: true });
-        (getFirebaseApp as jest.Mock).mockReturnValue({
-            firestore: () => ({
-                collection: () => ({
-                    where: () => ({
-                        get: mockGet
-                    }),
-                    add: jest.fn().mockImplementation(() => {
-                        throw new Error(expectedErrorMessage)
-                    }),
-                })
-            })
-        });
+        const expectedErrorMessage = "Database Writing error";
+        const ecpectedError = new Error(expectedErrorMessage)
         const gameName = "daveEnjoysBubbleBaths"
         const password = "dmon"
         const hostId = "2323"
         const hostName = "david"
         const gameGenre = "classical"
-        const expectedGameDetails: GameDetails = {
+        const expectedGameDetails = {
             name: gameName,
             password: password,
             hostId: hostId,
@@ -120,21 +112,40 @@ describe("createGame", () => {
             }
         };
 
-        (generateGameContent as jest.Mock).mockResolvedValue(expectedGameDetails)
+        const mockedAxios = axios as jest.Mocked<AxiosStatic>
+        const mockedAxiosReponse = {
+            data: expectedGameDetails
+        }
+        mockedAxios.request.mockResolvedValue(mockedAxiosReponse)
+        const mockGet = jest.fn().mockResolvedValue({ empty: true });
+        const mockAdd = jest.fn().mockImplementation(() => {
+            throw ecpectedError
+        });
+
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet
+                    }),
+                    add: mockAdd,
+                })
+            })
+        });
 
         return server.createGame(gameName, password, gameGenre, hostName, hostId).catch(error => {
-            expect(error).toEqual(expectedErrorMessage)
+            expect(mockAdd).toHaveBeenCalledWith(expectedGameDetails)
+            expect(error).toEqual(ecpectedError)
         })
     })
 });
 
 describe("joinGame", () => {
-
     it('join game successfully', () => {
         const gameData = {
             id: 'g001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 0}
+                'p001': { name: 'vanboss', score: 0 }
             }
         };
         const returnedGame = {
@@ -151,7 +162,7 @@ describe("joinGame", () => {
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate 
+                        update: mockUpdate
                     })
                 })
             })
@@ -160,13 +171,13 @@ describe("joinGame", () => {
         const playerId = 'p002';
         const playerName = 'fekaroniAndCheese';
         var leaderBoard = Object.assign({}, gameData.leaderBoard)
-        leaderBoard['p002'] = {name: playerName, score: 0}
+        leaderBoard['p002'] = { name: playerName, score: 0 }
 
         return server.joinGame(gameId, playerId, playerName).then(res => {
             console.log(res);
-            expect(mockUpdate).toHaveBeenCalledWith({ 'leaderBoard' : leaderBoard })
+            expect(mockUpdate).toHaveBeenCalledWith({ 'leaderBoard': leaderBoard })
             expect(res).toEqual(expectedGameId.id)
-            });
+        });
     })
 
     it('player attempts to join nonexistent game', () => {
@@ -181,7 +192,7 @@ describe("joinGame", () => {
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate 
+                        update: mockUpdate
                     })
                 })
             })
@@ -193,15 +204,15 @@ describe("joinGame", () => {
         return server.joinGame(gameId, playerId, playerName).then(res => {
             console.log(res);
             expect(res).toEqual(`Cannot find game with id ${gameId}.`)
-            });
+        });
     });
 
     it('player attempts to join a game they are already in', () => {
         const gameData = {
             id: 'g001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 0},
-                'p002': {name: 'dbaum', score: 0}
+                'p001': { name: 'vanboss', score: 0 },
+                'p002': { name: 'dbaum', score: 0 }
             }
         };
         const returnedGame = {
@@ -218,7 +229,7 @@ describe("joinGame", () => {
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate 
+                        update: mockUpdate
                     })
                 })
             })
@@ -230,17 +241,17 @@ describe("joinGame", () => {
         return server.joinGame(gameId, playerId, playerName).then(res => {
             console.log(res);
             expect(res).toEqual(`Player ${playerId} has already joined game ${gameId}.`)
-            });
+        });
     });
 
     it('player attempts to join a full game', () => {
         const gameData = {
             id: 'g001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 0},
-                'p002': {name: 'dbaum', score: 0},
-                'p003': {name: 'anthoche', score: 0},
-                'p004': {name: 'og', score: 0},
+                'p001': { name: 'vanboss', score: 0 },
+                'p002': { name: 'dbaum', score: 0 },
+                'p003': { name: 'anthoche', score: 0 },
+                'p004': { name: 'og', score: 0 },
             }
         };
         const returnedGame = {
@@ -257,7 +268,7 @@ describe("joinGame", () => {
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate 
+                        update: mockUpdate
                     })
                 })
             })
@@ -269,9 +280,9 @@ describe("joinGame", () => {
         return server.joinGame(gameId, playerId, playerName).then(res => {
             console.log(res);
             expect(res).toEqual(`Game ${gameId} is full`)
-            });
+        });
     });
-    
+
 });
 
 // TODO: Add more tests for this function. No test coverage currently for inner lambda function
