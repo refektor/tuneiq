@@ -328,3 +328,307 @@ describe("increasePlayerScore", () => {
         })
     })
 });
+
+
+describe("deleteGame", () => {
+
+    it('delete game successfully', () => {
+        const gameData = {
+            id: 'g001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 0}
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const expectedDeleteResponse = `Game ${expectedGameId} was deleted.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedDeleteResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.deleteGame(gameId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedDeleteResponse);
+            });
+    });
+
+    it('could not find game to delete', () => {
+        const returnedGame = {
+            exists: false
+        }
+        const expectedGameId = { id: 'g001' };
+        const expectedDeleteResponse = `Game Id: ${expectedGameId.id} is invalid.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedDeleteResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.deleteGame(gameId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedDeleteResponse);
+            });
+    });
+});
+
+// NOTE: for now, end game functionality only includes deleting a game
+describe("endGame", () => {
+
+    it('end game successfully', () => {
+        const gameData = {
+            id: 'g001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 0}
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const expectedDeleteResponse = `Game ${expectedGameId} was deleted.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedDeleteResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.endGame(gameId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedDeleteResponse);
+            });
+    });
+
+    it('could not find game to end', () => {
+        const returnedGame = {
+            exists: false
+        }
+        const expectedGameId = { id: 'g001' };
+        const expectedDeleteResponse = `Game Id: ${expectedGameId.id} is invalid.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedDeleteResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.deleteGame(gameId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedDeleteResponse);
+            });
+    });
+});
+
+
+describe("leaveGame", () => {
+
+    it('non-host non-last player left game successfully', () => {
+        const gameData = {
+            id: 'g001',
+            hostId: 'p001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 99},
+                'p002': {name: 'dizzybaum', score: 98},
+                'p003': {name: 'antholini', score: 97}
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const leavingPlayerId = 'p002';
+        const expectedResponse = `Player ${leavingPlayerId} left game ${expectedGameId.id}.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.leaveGame(gameId, leavingPlayerId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedResponse);
+            });
+    });
+
+    it('host non-last player left game successfully', () => {
+        const gameData = {
+            id: 'g001',
+            hostId: 'p001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 99},
+                'p002': {name: 'dizzybaum', score: 98},
+                'p003': {name: 'antholini', score: 97}
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const leavingPlayerId = 'p001';
+        const expectedResponse = `Player ${leavingPlayerId} left game ${expectedGameId.id}.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.leaveGame(gameId, leavingPlayerId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedResponse);
+            });
+    });
+
+    it('last player left game successfully', () => {
+        const gameData = {
+            id: 'g001',
+            hostId: 'p001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 99},
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const leavingPlayerId = 'p001';
+        const expectedResponse = `Game ${expectedGameId.id} was deleted.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.leaveGame(gameId, leavingPlayerId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedResponse);
+            });
+    });
+
+    it('player tries to leave game they are not in', () => {
+        const gameData = {
+            id: 'g001',
+            hostId: 'p001',
+            leaderBoard: {
+                'p001': {name: 'vanboss', score: 99},
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const leavingPlayerId = 'p002';
+        const expectedResponse = `Player ${leavingPlayerId} is not in game ${expectedGameId.id}.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.leaveGame(gameId, leavingPlayerId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedResponse);
+            });
+    });
+
+    it('could not find game to leave', () => {
+        const returnedGame = {
+            exists: false
+        }
+        const expectedGameId = { id: 'g001' };
+        const leavingPlayerId = 'p002';
+        const expectedResponse = `Game Id ${expectedGameId.id} is invalid.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
+            })
+        });
+        const gameId = expectedGameId.id;
+
+        return server.leaveGame(gameId, leavingPlayerId).then(res => {
+            console.log(res);
+            expect(res).toEqual(expectedResponse);
+            });
+    });
+});
