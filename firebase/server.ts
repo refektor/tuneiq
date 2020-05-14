@@ -2,6 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import axios from 'axios'
 import { getFirebaseApp } from './firebase'
 import { availableGenres } from './available_genres'
+import Leaderboard from '../components/leaderboard';
 
 const MAX_PLAYERS_PER_GAME = 4
 
@@ -144,8 +145,45 @@ function endGame(gameId: string): Promise<string> {
     return deleteGame(gameId);
 }
 
-function leaveGame(gameId: string, userId: string): void {
-    return;
+function leaveGame(gameId: string, userId: string): Promise<string> {
+    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
+    return getFirebaseApp().firestore().runTransaction((transaction) => {
+        return transaction.get(gameDocRef).then(gameDoc => {
+            if (!gameDoc.exists) {
+                console.log("wut")
+                return Promise.reject(`Game Id ${gameId} is invalid`)
+            }
+            const gameData = gameDoc.data();
+            const leaderBoard = gameData.leaderBoard;
+            if (!gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
+                return Promise.reject(`Player ${userId} is not in game ${gameId}.`);
+            }
+            if (Object.keys(leaderBoard).length > 1) {
+                var newLeaderBoard = {}
+                Object.keys(leaderBoard).forEach(playerId => {
+                    if(playerId != userId){
+                        newLeaderBoard[playerId] = leaderBoard[playerId];
+                    }
+                });
+                transaction.update(gameDocRef, { 'leaderBoard': newLeaderBoard });
+                const usersLeft = Object.keys(newLeaderBoard);
+                if(gameData.hostId === userId){
+                    const newHostId = usersLeft[usersLeft.length * Math.random() << 0];
+                    transaction.update(gameDocRef, { 'hostId': newHostId })
+                }
+                return `Player ${userId} left game ${gameId}.`;
+            }
+            else {
+                console.log('huh')
+                deleteGame(gameId);
+                return `Player ${userId} left game ${gameId}, ending the game.`
+            }
+        })
+    }).then(response => {
+        return response
+    }).catch(error => {
+        return error
+    })
 }
 
 // Returns the updated score
