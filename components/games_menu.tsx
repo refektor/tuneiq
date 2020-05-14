@@ -1,11 +1,38 @@
 import Link from 'next/link'
-import { Grid, Button, Fab } from '@material-ui/core'
+import { Container, Fab } from '@material-ui/core'
+import AddIcon from '@material-ui/icons/Add';
+import PeopleAltIcon from '@material-ui/icons/PeopleAlt';
+import useGameStyles from '../styles/game_styles';
+
+const CREATE_URL = "/games/create";
+const JOIN_URL = "/games/join";
 
 export default function GamesMenu() {
-    return (<div className="grid">
-        <Grid color="primary" aria-label="outlined primary button group">
-            <Link href="/games/create"><Button color="primary">Create Game</Button></Link>
-            <Link href="/games/join"><Button color="primary">Join a Game</Button></Link>
-        </Grid>
-    </div>);
+    const classes = useGameStyles();
+    
+    return (
+        <Container maxWidth="sm">
+            <Link href={CREATE_URL}>
+                <Fab 
+                    variant="extended"
+                    color="primary"
+                    size="large"
+                    className={classes.button}
+                >
+                    <AddIcon />
+                    CREATE GAME
+                </Fab>
+            </Link>
+            <Link href={JOIN_URL}>
+                <Fab 
+                    variant="extended"
+                    color="primary"
+                    size="large"
+                    className={classes.button}
+                >
+                    <PeopleAltIcon />
+                    JOIN GAME
+                </Fab>
+            </Link>
+        </Container>);
 }

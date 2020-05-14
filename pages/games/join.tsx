@@ -1,4 +1,4 @@
-import { TextField, Button } from '@material-ui/core';
+import { TextField, Fab } from '@material-ui/core';
 import { useState } from "react";
 import { useRouter } from 'next/router'
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
@@ -7,8 +7,6 @@ import Auth from '../../components/auth'
 import useGameStyles from '../../styles/game_styles';
 import * as server from '../../firebase/server';
 import {getFirebaseApp} from '../../firebase/firebase';
-
-
 
 export default function JoinGame() {
     const classes = useGameStyles();
@@ -72,16 +70,16 @@ export default function JoinGame() {
             error={passError} 
             onChange={handlePasswordChange} 
           />
-          <Button
-            variant="contained"
+          <Fab
+            variant="extended"
             color="primary"
             size="large"
             className={classes.button}
-            startIcon={<PlayArrowIcon />}
             onClick={joinGame}
           >
+            <PlayArrowIcon />
             JOIN
-          </Button>
+          </Fab>
         </PageWrapper>
       </Auth>
     );
