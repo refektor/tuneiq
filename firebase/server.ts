@@ -89,28 +89,31 @@ function attemptToJoinGame(gameName: string, gamePassword: string, playerId: str
 
 
 function joinGame(gameId: string, playerId: string, playerName: string) {
-    return getFirebaseApp().firestore().collection("games").doc(gameId).get().then((game) => {
-        if (!game.exists) {
-            return Promise.reject(`Cannot find game with id ${gameId}.`)
-        }
-        const gameData = game.data();
-        const leaderBoard = gameData.leaderBoard;
-        if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME) {
-            return Promise.reject(`Game ${gameId} is full`);
-        }
-        else if (playerId in leaderBoard) {
-            return Promise.reject(`Player ${playerId} has already joined game ${gameId}.`);
-        }
-        else {
-            leaderBoard[playerId] = { "name": playerName, "score": 0 }
-            getFirebaseApp().firestore().collection("games")
-                .doc(gameId)
-                .update({ 'leaderBoard': leaderBoard });
-            return gameId;
-        }
-    }).catch((error) => {
-        return error;
-    });
+    const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
+    return getFirebaseApp().firestore().runTransaction((transaction) => {
+        return transaction.get(gameDocRef).then(gameDoc => {
+            if (!gameDoc.exists) {
+                return Promise.reject(`Game Id ${gameId} is invalid`)
+            }
+            const gameData = gameDoc.data();
+            const leaderBoard = gameData.leaderBoard;
+            if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME) {
+                return Promise.reject(`Game ${gameId} is full`);
+            }
+            else if (playerId in leaderBoard) {
+                return Promise.reject(`Player ${playerId} has already joined game ${gameId}.`);
+            }
+            else {
+                leaderBoard[playerId] = { "name": playerName, "score": 0 }
+                transaction.update(gameDocRef, { 'leaderBoard': leaderBoard });
+                return gameId;
+            }
+        })
+    }).then(response => {
+        return response
+    }).catch(error => {
+        return error
+    })
 }
 
 function startGame(gameId: string): void {
@@ -150,7 +153,6 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
     return getFirebaseApp().firestore().runTransaction((transaction) => {
         return transaction.get(gameDocRef).then(gameDoc => {
             if (!gameDoc.exists) {
-                console.log("wut")
                 return Promise.reject(`Game Id ${gameId} is invalid`)
             }
             const gameData = gameDoc.data();
@@ -174,7 +176,6 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
                 return `Player ${userId} left game ${gameId}.`;
             }
             else {
-                console.log('huh')
                 deleteGame(gameId);
                 return `Player ${userId} left game ${gameId}, ending the game.`
             }

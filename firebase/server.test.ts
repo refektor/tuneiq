@@ -155,27 +155,24 @@ describe("joinGame", () => {
         }
         const expectedGameId = { id: 'g001' };
         const mockGet = jest.fn().mockResolvedValue(returnedGame);
-        const mockUpdate = jest.fn().mockResolvedValue(null);
+        const playerId = 'p002';
+        const gameId = expectedGameId.id;
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate
                     })
-                })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(gameId)
             })
         });
-        const gameId = expectedGameId.id;
-        const playerId = 'p002';
         const playerName = 'fekaroniAndCheese';
         var leaderBoard = Object.assign({}, gameData.leaderBoard)
         leaderBoard['p002'] = { name: playerName, score: 0 }
 
         return server.joinGame(gameId, playerId, playerName).then(res => {
-            console.log(res);
-            expect(mockUpdate).toHaveBeenCalledWith({ 'leaderBoard': leaderBoard })
-            expect(res).toEqual(expectedGameId.id)
+            expect(res).toEqual(gameId)
         });
     })
 
@@ -185,15 +182,15 @@ describe("joinGame", () => {
         }
         const expectedGameId = { id: 'g001' };
         const mockGet = jest.fn().mockResolvedValue(returnedGame);
-        const mockUpdate = jest.fn().mockResolvedValue(null);
+        const expectedResponse = `Game Id ${expectedGameId.id} is invalid.`;
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate
                     })
-                })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
             })
         });
         const gameId = expectedGameId.id;
@@ -201,8 +198,7 @@ describe("joinGame", () => {
         const playerName = 'fekaroniAndCheese';
 
         return server.joinGame(gameId, playerId, playerName).then(res => {
-            console.log(res);
-            expect(res).toEqual(`Cannot find game with id ${gameId}.`)
+            expect(res).toEqual(expectedResponse)
         });
     });
 
@@ -222,24 +218,23 @@ describe("joinGame", () => {
         }
         const expectedGameId = { id: 'g001' };
         const mockGet = jest.fn().mockResolvedValue(returnedGame);
-        const mockUpdate = jest.fn().mockResolvedValue(null);
+        const gameId = expectedGameId.id;
+        const playerId = 'p002';
+        const playerName = 'dbaum';
+        const expectedResponse = `Player ${playerId} has already joined game ${gameId}.`;
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate
                     })
-                })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
             })
         });
-        const gameId = expectedGameId.id;
-        const playerId = 'p002';
-        const playerName = 'dbaum';
 
         return server.joinGame(gameId, playerId, playerName).then(res => {
-            console.log(res);
-            expect(res).toEqual(`Player ${playerId} has already joined game ${gameId}.`)
+            expect(res).toEqual(expectedResponse);
         });
     });
 
@@ -261,24 +256,24 @@ describe("joinGame", () => {
         }
         const expectedGameId = { id: 'g001' };
         const mockGet = jest.fn().mockResolvedValue(returnedGame);
-        const mockUpdate = jest.fn().mockResolvedValue(null);
+        const gameId = expectedGameId.id;
+        const playerId = 'p005';
+        const playerName = 'fekalonius';
+        const expectedResponse = `Game ${gameId} is full`;
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
                     doc: () => ({
                         get: mockGet,
-                        update: mockUpdate
                     })
-                })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
             })
         });
-        const gameId = expectedGameId.id;
-        const playerId = 'p005';
-        const playerName = 'fekalonius';
 
         return server.joinGame(gameId, playerId, playerName).then(res => {
             console.log(res);
-            expect(res).toEqual(`Game ${gameId} is full`)
+            expect(res).toEqual(expectedResponse)
         });
     });
 
