@@ -97,7 +97,10 @@ function joinGame(gameId: string, playerId: string, playerName: string) {
             }
             const gameData = gameDoc.data();
             const leaderBoard = gameData.leaderBoard;
-            if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME) {
+            if (gameData.startTime != null){
+                return Promise.reject(`Game ${gameId} has already started`);
+            }
+            else if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME) {
                 return Promise.reject(`Game ${gameId} is full`);
             }
             else if (playerId in leaderBoard) {

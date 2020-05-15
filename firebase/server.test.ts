@@ -143,6 +143,7 @@ describe("joinGame", () => {
     it('join game successfully', () => {
         const gameData = {
             id: 'g001',
+            startTime: 1589335032108,
             leaderBoard: {
                 'p001': { name: 'vanboss', score: 0 }
             }
@@ -202,13 +203,10 @@ describe("joinGame", () => {
         });
     });
 
-    it('player attempts to join a game they are already in', () => {
+    it('player attempts to join a game that has started', () => {
         const gameData = {
             id: 'g001',
-            leaderBoard: {
-                'p001': { name: 'vanboss', score: 0 },
-                'p002': { name: 'dbaum', score: 0 }
-            }
+            startTime: null
         };
         const returnedGame = {
             exists: true,
@@ -221,7 +219,7 @@ describe("joinGame", () => {
         const gameId = expectedGameId.id;
         const playerId = 'p002';
         const playerName = 'dbaum';
-        const expectedResponse = `Player ${playerId} has already joined game ${gameId}.`;
+        const expectedResponse = `Game ${gameId} has already started`;
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
                 collection: () => ({
@@ -241,6 +239,7 @@ describe("joinGame", () => {
     it('player attempts to join a full game', () => {
         const gameData = {
             id: 'g001',
+            startTime: 1589335032108,
             leaderBoard: {
                 'p001': { name: 'vanboss', score: 0 },
                 'p002': { name: 'dbaum', score: 0 },
@@ -277,6 +276,42 @@ describe("joinGame", () => {
         });
     });
 
+    it('player attempts to join a game they are already in', () => {
+        const gameData = {
+            id: 'g001',
+            startTime: 1589335032108,
+            leaderBoard: {
+                'p001': { name: 'vanboss', score: 0 },
+                'p002': { name: 'dbaum', score: 0 }
+            }
+        };
+        const returnedGame = {
+            exists: true,
+            data: () => {
+                return gameData;
+            }
+        }
+        const expectedGameId = { id: 'g001' };
+        const mockGet = jest.fn().mockResolvedValue(returnedGame);
+        const gameId = expectedGameId.id;
+        const playerId = 'p002';
+        const playerName = 'dbaum';
+        const expectedResponse = `Player ${playerId} has already joined game ${gameId}.`;
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: mockGet,
+                    })
+                }),
+                runTransaction: jest.fn().mockResolvedValue(expectedResponse)
+            })
+        });
+
+        return server.joinGame(gameId, playerId, playerName).then(res => {
+            expect(res).toEqual(expectedResponse);
+        });
+    });
 });
 
 // TODO: Add more tests for this function. No test coverage currently for inner lambda function
@@ -436,7 +471,6 @@ describe("deleteGame", () => {
         const gameId = expectedGameId.id;
 
         return server.deleteGame(gameId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
         });
     });
@@ -461,7 +495,6 @@ describe("deleteGame", () => {
         const gameId = expectedGameId.id;
 
         return server.deleteGame(gameId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
         });
     });
@@ -484,7 +517,7 @@ describe("endGame", () => {
             }
         }
         const expectedGameId = { id: 'g001' };
-        const expectedDeleteResponse = `Game ${expectedGameId} was deleted.`;
+        const expectedDeleteResponse = `Game ${expectedGameId.id} was deleted.`;
         const mockGet = jest.fn().mockResolvedValue(returnedGame);
         (getFirebaseApp as jest.Mock).mockReturnValue({
             firestore: () => ({
@@ -499,7 +532,6 @@ describe("endGame", () => {
         const gameId = expectedGameId.id;
 
         return server.endGame(gameId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
         });
     });
@@ -524,7 +556,6 @@ describe("endGame", () => {
         const gameId = expectedGameId.id;
 
         return server.deleteGame(gameId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
         });
     });
@@ -566,7 +597,6 @@ describe("leaveGame", () => {
         const gameId = expectedGameId.id;
 
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedResponse);
         });
     });
@@ -604,7 +634,6 @@ describe("leaveGame", () => {
         const gameId = expectedGameId.id;
 
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedResponse);
         });
     });
@@ -640,7 +669,6 @@ describe("leaveGame", () => {
         const gameId = expectedGameId.id;
 
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedResponse);
         });
     });
@@ -676,7 +704,6 @@ describe("leaveGame", () => {
         const gameId = expectedGameId.id;
 
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedResponse);
         });
     });
@@ -702,7 +729,6 @@ describe("leaveGame", () => {
         const gameId = expectedGameId.id;
 
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
-            console.log(res);
             expect(res).toEqual(expectedResponse);
         });
     });
