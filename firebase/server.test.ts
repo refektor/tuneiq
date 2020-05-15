@@ -1,6 +1,5 @@
 import * as server from './server';
 import { getFirebaseApp } from "./firebase";
-import firebase from "firebase"
 import axios from 'axios';
 import { AxiosStatic } from 'axios'
 
@@ -320,12 +319,93 @@ describe("increasePlayerScore", () => {
                 }),
                 runTransaction: jest.fn().mockResolvedValue(new Error(expectedErrorMessage))
             }),
-
         });
 
         return server.increasePlayerScore(gameId, userId, 10).catch(error => {
             expect(error).toEqual(expectedErrorMessage)
         })
+    });
+});
+
+
+describe("isUserInGame", () => {
+    it("returns true with valid userId in game", () => {
+        const gameId = "12313";
+        const userId = "asdf"
+        const expectedResult = true;
+        const mockedData = jest.fn().mockReturnValue(
+            {
+                leaderBoard: {
+                    [userId]: { name: 'vanboss', score: 0 }
+                }
+            });
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: jest.fn().mockResolvedValue({
+                            exists: true,
+                            data: mockedData
+                        })
+                    })
+                })
+            }),
+        });
+
+        return server.isUserInGame(gameId, userId).then((response: boolean) => {
+            expect(response).toEqual(expectedResult);
+            expect(mockedData).toBeCalledTimes(1)
+        })
+
+    });
+    it("returns false with invalid userId in game", () => {
+        const gameId = "12313";
+        const userId = "asdf"
+        const expectedResult = false;
+        const mockedData = jest.fn().mockReturnValue(
+            {
+                leaderBoard: {}
+            });
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: jest.fn().mockResolvedValue({
+                            exists: true,
+                            data: mockedData
+                        })
+                    })
+                })
+            }),
+        });
+
+        return server.isUserInGame(gameId, userId).then((response: boolean) => {
+            expect(response).toEqual(expectedResult);
+            expect(mockedData).toBeCalledTimes(1)
+        })
+
+    });
+    it("returns error with invalid gameId", () => {
+        const gameId = "12313";
+        const userId = "asd"
+        const expectedResult = `Game Id: ${gameId} is invalid`;
+
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    doc: () => ({
+                        get: jest.fn().mockResolvedValue({
+                            exists: false,
+                        })
+                    })
+                })
+            }),
+        });
+
+        return server.isUserInGame(gameId, userId).catch((error) => {
+            expect(error).toEqual(expectedResult);
+        })
+
     })
 });
 
@@ -336,7 +416,7 @@ describe("deleteGame", () => {
         const gameData = {
             id: 'g001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 0}
+                'p001': { name: 'vanboss', score: 0 }
             }
         };
         const returnedGame = {
@@ -363,7 +443,7 @@ describe("deleteGame", () => {
         return server.deleteGame(gameId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
-            });
+        });
     });
 
     it('could not find game to delete', () => {
@@ -388,7 +468,7 @@ describe("deleteGame", () => {
         return server.deleteGame(gameId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
-            });
+        });
     });
 });
 
@@ -399,7 +479,7 @@ describe("endGame", () => {
         const gameData = {
             id: 'g001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 0}
+                'p001': { name: 'vanboss', score: 0 }
             }
         };
         const returnedGame = {
@@ -426,7 +506,7 @@ describe("endGame", () => {
         return server.endGame(gameId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
-            });
+        });
     });
 
     it('could not find game to end', () => {
@@ -451,7 +531,7 @@ describe("endGame", () => {
         return server.deleteGame(gameId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedDeleteResponse);
-            });
+        });
     });
 });
 
@@ -463,9 +543,9 @@ describe("leaveGame", () => {
             id: 'g001',
             hostId: 'p001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 99},
-                'p002': {name: 'dizzybaum', score: 98},
-                'p003': {name: 'antholini', score: 97}
+                'p001': { name: 'vanboss', score: 99 },
+                'p002': { name: 'dizzybaum', score: 98 },
+                'p003': { name: 'antholini', score: 97 }
             }
         };
         const returnedGame = {
@@ -493,7 +573,7 @@ describe("leaveGame", () => {
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedResponse);
-            });
+        });
     });
 
     it('host non-last player left game successfully', () => {
@@ -501,9 +581,9 @@ describe("leaveGame", () => {
             id: 'g001',
             hostId: 'p001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 99},
-                'p002': {name: 'dizzybaum', score: 98},
-                'p003': {name: 'antholini', score: 97}
+                'p001': { name: 'vanboss', score: 99 },
+                'p002': { name: 'dizzybaum', score: 98 },
+                'p003': { name: 'antholini', score: 97 }
             }
         };
         const returnedGame = {
@@ -531,7 +611,7 @@ describe("leaveGame", () => {
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedResponse);
-            });
+        });
     });
 
     it('last player left game successfully', () => {
@@ -539,7 +619,7 @@ describe("leaveGame", () => {
             id: 'g001',
             hostId: 'p001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 99},
+                'p001': { name: 'vanboss', score: 99 },
             }
         };
         const returnedGame = {
@@ -567,7 +647,7 @@ describe("leaveGame", () => {
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedResponse);
-            });
+        });
     });
 
     it('player tries to leave game they are not in', () => {
@@ -575,7 +655,7 @@ describe("leaveGame", () => {
             id: 'g001',
             hostId: 'p001',
             leaderBoard: {
-                'p001': {name: 'vanboss', score: 99},
+                'p001': { name: 'vanboss', score: 99 },
             }
         };
         const returnedGame = {
@@ -603,7 +683,7 @@ describe("leaveGame", () => {
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedResponse);
-            });
+        });
     });
 
     it('could not find game to leave', () => {
@@ -629,6 +709,6 @@ describe("leaveGame", () => {
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
             console.log(res);
             expect(res).toEqual(expectedResponse);
-            });
+        });
     });
 });
