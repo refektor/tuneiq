@@ -23,6 +23,16 @@ const inputStyles = makeStyles((theme) => createStyles ({
             margin: theme.spacing(0, 1),
           }
         }
+      },
+
+      genreIcon: {
+        margin: theme.spacing(0, 2, 0 ,0)
+      },
+
+      genreText: {
+        "& > *": {
+          color: theme.palette.text.hint,
+        }
       }
 }));
 

@@ -2,7 +2,6 @@ import { AxiosRequestConfig } from 'axios';
 import axios from 'axios'
 import { getFirebaseApp } from './firebase'
 import { availableGenres } from './available_genres'
-import Leaderboard from '../components/leaderboard';
 
 const MAX_PLAYERS_PER_GAME = 4
 
@@ -61,12 +60,12 @@ function doesGameNameExist(name) {
 
 function getPossibleGenres() {
     // TODO: replace with call to spotify api, endpoint: https://api.spotify.com/v1/recommendations/available-genre-seeds
+    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno"] //change at will
     return availableGenres['genres']
-        .filter((genre) => { return genre === "house" || genre === "dance" || genre === "hip-hop" || genre === "latin" || genre === "reggae" || genre === "techno" })
         .map((genre) => {
             return {
-                genre: genre,
-                img: `../${genre}.jpg`
+                name: genre,
+                supported: supportedGenres.includes(genre),
             }
         });
 }
