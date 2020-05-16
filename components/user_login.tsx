@@ -12,7 +12,7 @@ export default function UserLogin(props) {
     const [nicknameLabel, setNicknameLabel] = useState("Nickname");
     const [nicknameError, setNicknameError] = useState(false);
 
-    function createNicknameClicked() {
+    function createNickname() {
         //TODO check db for existing nicknames
         if (!nickname.length) {
             setNicknameError(true);
@@ -46,25 +46,37 @@ export default function UserLogin(props) {
         setNickname(input)
     }
 
+    function submitForm(e) {
+        e.preventDefault();
+        if (nickname.length) {
+            createNickname();
+        } else {
+            setNicknameError(true);
+            setNicknameLabel("Bruh...");
+        }
+    }
+
     return (
         <Container>
-            <TextField 
-                error={nicknameError}
-                className={classes.inputChild} 
-                id="standard-basic" 
-                label={nicknameLabel} 
-                onChange={updateNickname}
-            />
-            <Fab
-                variant="extended"
-                color="primary"
-                size="large"
-                className={classes.button}
-                onClick={createNicknameClicked}
-            >
-                <AddIcon />
-                Start
-            </Fab>
+            <form noValidate autoComplete="off" onSubmit={submitForm}>
+                <TextField 
+                    error={nicknameError}
+                    className={classes.inputChild} 
+                    id="standard-basic" 
+                    label={nicknameLabel} 
+                    onChange={updateNickname}
+                />
+                <Fab
+                    variant="extended"
+                    color="primary"
+                    size="large"
+                    className={classes.button}
+                    onClick={createNickname}
+                >
+                    <AddIcon />
+                    Start
+                </Fab>
+            </form>
         </Container>
     )
 }
