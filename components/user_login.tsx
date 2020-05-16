@@ -16,7 +16,7 @@ export default function UserLogin(props) {
         //TODO check db for existing nicknames
         if (!nickname.length) {
             setNicknameError(true);
-            setNicknameLabel("Bruh... :/");
+            setNicknameLabel("Bruh...");
             return;
         }
 
