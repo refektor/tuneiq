@@ -4,12 +4,12 @@ import { useRouter } from 'next/router'
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth'
-import useGameStyles from '../../styles/game_styles';
+import inputStyles from '../../styles/styles';
 import * as server from '../../firebase/server';
-import {getFirebaseApp} from '../../firebase/firebase';
+import { getFirebaseApp } from '../../firebase/firebase';
 
 export default function JoinGame() {
-    const classes = useGameStyles();
+    const classes = inputStyles();
     const router = useRouter();
     const [nameLabel, setNameLabel] = useState("Name")
     const [nameError, setNameError] = useState(false);

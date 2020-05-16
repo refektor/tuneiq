@@ -8,12 +8,12 @@ import { createGame, doesGameNameExist } from '../../firebase/server';
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth';
 import GenrePicker from '../../components/genre_picker';
-import useGameStyles from '../../styles/game_styles';
+import inputStyles from '../../styles/styles';
 
 const FirebaseApp = getFirebaseApp();
 
 function CreateGame({ player }) {
-    const classes = useGameStyles();
+    const classes = inputStyles();
     const router = useRouter();
     const [name, setName] = useState("");
     const [genre, setGenre] = useState("");
@@ -117,15 +117,6 @@ function CreateGame({ player }) {
               >
                 <PlayArrowIcon />
                 PLAY
-              </Fab>
-              <Fab
-                variant="extended"
-                color="primary"
-                size="large"
-                className={classes.button}
-                href={authUrl}
-              >
-                  Spotify
               </Fab>
             </Container>
           </PageWrapper>

@@ -37,6 +37,7 @@ export default class Auth extends Component<IProps, IState> {
         FirebaseApp.auth().onAuthStateChanged((user) => {
             let authenticated = false;
             let needsName = true;
+            console.log(user.uid);
             if (user?.displayName) {
                 console.log(`signed in as id: ${user.displayName}`)
                 if (this.props.onSuccess) {
