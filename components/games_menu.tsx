@@ -2,13 +2,13 @@ import Link from 'next/link'
 import { Container, Fab } from '@material-ui/core'
 import AddIcon from '@material-ui/icons/Add';
 import PeopleAltIcon from '@material-ui/icons/PeopleAlt';
-import useGameStyles from '../styles/game_styles';
+import inputStyles from '../styles/styles';
 
 const CREATE_URL = "/games/create";
 const JOIN_URL = "/games/join";
 
 export default function GamesMenu() {
-    const classes = useGameStyles();
+    const classes = inputStyles();
     
     return (
         <Container maxWidth="sm">

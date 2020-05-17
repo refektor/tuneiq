@@ -2,31 +2,29 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router'
 import { Container, TextField, Fab } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import * as hash from 'password-hash';
 import{ getFirebaseApp } from '../../firebase/firebase';
-import { createGame, doesGameNameExist } from '../../firebase/server';
+import { createGame, doesGameNameExist, getPossibleGenres } from '../../firebase/server';
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth';
-import GenrePicker from '../../components/genre_picker';
-import useGameStyles from '../../styles/game_styles';
+import HeadsetIcon from '@material-ui/icons/Headset';
+import inputStyles from '../../styles/styles';
 
 const FirebaseApp = getFirebaseApp();
 
+const genres = getPossibleGenres();
+
 function CreateGame({ player }) {
-    const classes = useGameStyles();
+    const classes = inputStyles();
     const router = useRouter();
     const [name, setName] = useState("");
-    const [genre, setGenre] = useState("");
+    const [genre, setGenre] = useState(null);
     const [password, setPassword] = useState("");
 
     const [nameLabel, setNameLabel] = useState("Game Name")
     const [nameError, setNameError] = useState(false);
     const [buttonDisabled, setButtonDisabled] = useState(true);
-
-    const authorizeEndpoint = 'https://accounts.spotify.com/authorize';
-    const clientId = "aee55436adf6456fba4cd426cc2b73b6"
-    const redirect_uri = 'http://localhost:3000/';
-    const authUrl = `${authorizeEndpoint}?client_id=${clientId}&redirect_uri=${redirect_uri}&response_type=token`
 
     const handleNameChange = (e) => {
       const currentName = e.target.value;
@@ -48,14 +46,19 @@ function CreateGame({ player }) {
       });
     }
 
-    const handleGenreChange = (genre) => {
-      setGenre(genre);
+    const handleGenreChange = (selectedGenre) => {
+      setGenre(selectedGenre['name']);
       
-      if (!nameError && name && password && genre.length) {
+      if (!nameError && name && password && selectedGenre['name'].length) {
         setButtonDisabled(false);
       } else {
         setButtonDisabled(true);
       }
+    }
+
+    //TODO: download preset icon and return them
+    const generateGenreIcon = (genre) => {
+      return <HeadsetIcon id={`dropdown_${genre}`} />
     }
 
     const handlePasswordChange = (e) => {
@@ -106,7 +109,25 @@ function CreateGame({ player }) {
                 className={classes.inputChild}
                 onChange={handlePasswordChange} 
               />
-              <GenrePicker onPicked={handleGenreChange} />
+              <Autocomplete
+                id="combo-box"
+                className={classes.inputChild}
+                clearOnEscape
+                options={genres}
+                onChange={(_,newGenre) => handleGenreChange(newGenre)}
+                getOptionDisabled={(genre) => genre.supported === false}
+                getOptionLabel={(genre) => genre.name}
+                renderOption={(genre) => (
+                  <>
+                    <span className={classes.genreIcon}>{generateGenreIcon(genre.name)}</span>
+                    <span>{genre.name}</span>
+                  </>
+                )}
+                renderInput={
+                  (params) => 
+                    <TextField className={classes.genreText} {...params} label="Genre" />
+                }
+              />
               <Fab
                 variant="extended"
                 color="primary"
@@ -117,15 +138,6 @@ function CreateGame({ player }) {
               >
                 <PlayArrowIcon />
                 PLAY
-              </Fab>
-              <Fab
-                variant="extended"
-                color="primary"
-                size="large"
-                className={classes.button}
-                href={authUrl}
-              >
-                  Spotify
               </Fab>
             </Container>
           </PageWrapper>

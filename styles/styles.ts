@@ -1,8 +1,7 @@
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { attemptToJoinGame } from '../firebase/server';
 
 // Create a theme instance.
-const useGameStyles = makeStyles((theme) => createStyles ({
+const inputStyles = makeStyles((theme) => createStyles ({
     inputChild: {
         margin: theme.spacing(3, 'auto'),
         display: 'block',
@@ -24,7 +23,17 @@ const useGameStyles = makeStyles((theme) => createStyles ({
             margin: theme.spacing(0, 1),
           }
         }
+      },
+
+      genreIcon: {
+        margin: theme.spacing(0, 2, 0 ,0)
+      },
+
+      genreText: {
+        "& > *": {
+          color: theme.palette.text.hint,
+        }
       }
 }));
 
-export default useGameStyles;
+export default inputStyles;

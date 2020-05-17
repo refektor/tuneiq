@@ -1,40 +1,82 @@
-import { TextField, Button } from '@material-ui/core'
-import { useState } from 'react' 
-import {getFirebaseApp} from '../firebase/firebase'
+import { useState } from 'react';
+import { Container, TextField, Fab } from '@material-ui/core';
+import { getFirebaseApp } from '../firebase/firebase';
+import inputStyles from '../styles/styles';
+import AddIcon from '@material-ui/icons/Add';
 
 const FirebaseApp = getFirebaseApp();
 
 export default function UserLogin(props) {
-    const [errorText, setErrorText] = useState("");
+    const classes = inputStyles();
     const [nickname, setNickname] = useState("");
-    const [hasError, setHasError] = useState(false);
+    const [nicknameLabel, setNicknameLabel] = useState("Nickname");
+    const [nicknameError, setNicknameError] = useState(false);
 
-    function createNicknameClicked(e) {
+    function createNickname() {
+        //TODO check db for existing nicknames
+        if (!nickname.length) {
+            setNicknameError(true);
+            setNicknameLabel("Bruh...");
+            return;
+        }
+
         const user = FirebaseApp.auth().currentUser;
 
         user.updateProfile({
             displayName: nickname,
             }).then(function() {
-            // Update successful.
-            console.log('success')
+                console.log('updated user nickname successfully');
             }).catch(function(error) {
-            // An error happened.
+                console.log(error);
             });
+            
         props.setNickname(nickname);
     }
 
+    function updateNickname(e) {
+        const input = e.target.value;
+        if (input.length) {
+            setNicknameError(false);
+            setNicknameLabel("Nickname");
+        } else {
+            setNicknameError(true);
+            setNicknameLabel("Bruh...");
+        }
+
+        setNickname(input)
+    }
+
+    function submitForm(e) {
+        e.preventDefault();
+        if (nickname.length) {
+            createNickname();
+        } else {
+            setNicknameError(true);
+            setNicknameLabel("Bruh...");
+        }
+    }
+
     return (
-        <form noValidate autoComplete="off">
-            <TextField 
-                error={hasError} 
-                id="standard-basic" 
-                label="Nickname" 
-                helperText={errorText} 
-                onChange={(e) => setNickname(e.target.value)}
-            />
-            <Button variant="contained"  onClick={createNicknameClicked}>
-                Create
-            </Button>
-        </form>
+        <Container>
+            <form noValidate autoComplete="off" onSubmit={submitForm}>
+                <TextField 
+                    error={nicknameError}
+                    className={classes.inputChild} 
+                    id="standard-basic" 
+                    label={nicknameLabel} 
+                    onChange={updateNickname}
+                />
+                <Fab
+                    variant="extended"
+                    color="primary"
+                    size="large"
+                    className={classes.button}
+                    onClick={createNickname}
+                >
+                    <AddIcon />
+                    Start
+                </Fab>
+            </form>
+        </Container>
     )
 }
