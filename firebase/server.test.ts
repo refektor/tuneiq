@@ -1,4 +1,4 @@
-import * as server from './server';
+import server from './server';
 import { getFirebaseApp } from "./firebase";
 import axios from 'axios';
 import { AxiosStatic } from 'axios'
@@ -356,6 +356,60 @@ describe("joinGame", () => {
     });
 });
 
+describe("attempToJoinGame", () => {
+    it("successfully attempts to join game with exisiting game code", () => {
+        const playerId = "123Dave";
+        const playerName = "dave";
+        const gameCode = "davesFancyGame";
+        const expectedGameId = "qweqwe"
+        const games = {
+            empty: false,
+            docs: [{
+                id: expectedGameId
+            }]
+        };
+        server.joinGame = jest.fn().mockResolvedValue(expectedGameId);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: jest.fn().mockResolvedValue(games)
+                    })
+                }),
+            }),
+        });
+
+        return server.attemptToJoinGame(gameCode, playerId, playerName).then(res => {
+            console.log(res)
+            expect(res).toEqual(expectedGameId)
+        })
+    });
+
+    it("fails to join game with non exisiting game code", () => {
+        const playerId = "123Dave";
+        const playerName = "dave";
+        const gameCode = "davesFancyGame";
+        const expectedMessage = { fieldName: "gameCode", message: `Game code: ${gameCode} does not exist` }
+        const games = {
+            empty: true
+        };
+
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: jest.fn().mockResolvedValue(games)
+                    })
+                }),
+            }),
+        });
+
+        return server.attemptToJoinGame(gameCode, playerId, playerName).then(res => {
+            expect(res).toEqual(expectedMessage)
+        })
+    })
+})
+
 // TODO: Add more tests for this function. No test coverage currently for inner lambda function
 describe("increasePlayerScore", () => {
     it("successfully updated score", () => {
@@ -371,7 +425,6 @@ describe("increasePlayerScore", () => {
                 }),
                 runTransaction: jest.fn().mockResolvedValue(expectedScore)
             }),
-
         });
 
         return server.increasePlayerScore(gameId, userId, 10).then(score => {
@@ -605,7 +658,6 @@ describe("endGame", () => {
 
 
 describe("leaveGame", () => {
-
     it('non-host non-last player left game successfully', () => {
         const gameData = {
             id: 'g001',
