@@ -34,8 +34,8 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
                 .add(gameDetails.data)
                 .then((docRef) => {
                     console.log(docRef)
-                    console.log("succesfully created game with id: ", docRef.id);
-                    return docRef.id
+                    console.log("successfully created game with id: ", docRef.id);
+                    return docRef.id;
                 })
                 .catch((error) => {
                     console.log(error);

@@ -3,7 +3,8 @@ import { TextField, Fab } from '@material-ui/core';
 import { useRouter } from 'next/router';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PageWrapper from '../../components/page_wrapper';
-import Auth from '../../components/auth';
+import LoadingWrapper from '../../components/loading_wrapper';
+import Auth from '../../components/auth'
 import inputStyles from '../../styles/styles';
 import * as server from '../../firebase/server';
 import { getFirebaseApp } from '../../firebase/firebase';
@@ -16,6 +17,7 @@ export default function JoinGame() {
     const [passError, setPassError] = useState(false);
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
+    const [loading, setLoading] = useState(false);
 
     function handleNameChange(e) {
         setName(e.target.value);
@@ -24,7 +26,7 @@ export default function JoinGame() {
 
     function joinGame() {
         // send request to join game, and get back game ID
-        // ...
+        setLoading(true);
         const user = getFirebaseApp().auth().currentUser;
         server.attemptToJoinGame(name, password, user.uid, user.displayName).then((gameId) => {
             router.push({
@@ -49,38 +51,40 @@ export default function JoinGame() {
     }
 
     return (
-      <Auth>
-        <PageWrapper>
-          <TextField 
-            id="standard-name" 
-            label={nameLabel} 
-            value={name} 
-            autoComplete="off" 
-            error={nameError} 
-            className={classes.inputChild}
-            onChange={handleNameChange} 
-          />
-          <TextField 
-            id="standard-password-input" 
-            label="Password" 
-            type="password" 
-            autoComplete="off"
-            className={classes.inputChild} 
-            value={password} 
-            error={passError} 
-            onChange={handlePasswordChange} 
-          />
-          <Fab
-            variant="extended"
-            color="primary"
-            size="large"
-            className={classes.button}
-            onClick={joinGame}
-          >
-            <PlayArrowIcon />
-            JOIN
-          </Fab>
-        </PageWrapper>
-      </Auth>
+      <PageWrapper>
+        <Auth>
+        <LoadingWrapper loading={loading}>
+        <TextField 
+        id="standard-name" 
+        label={nameLabel} 
+        value={name} 
+        autoComplete="off" 
+        error={nameError} 
+        className={classes.inputChild}
+        onChange={handleNameChange} 
+        />
+        <TextField 
+        id="standard-password-input" 
+        label="Password" 
+        type="password" 
+        autoComplete="off"
+        className={classes.inputChild} 
+        value={password} 
+        error={passError} 
+        onChange={handlePasswordChange} 
+        />
+        <Fab
+        variant="extended"
+        color="primary"
+        size="large"
+        className={classes.button}
+        onClick={joinGame}
+        >
+        <PlayArrowIcon />
+        JOIN
+        </Fab>
+        </LoadingWrapper>
+        </Auth>
+    </PageWrapper>
     );
 }

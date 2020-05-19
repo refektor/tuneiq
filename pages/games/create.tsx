@@ -6,6 +6,7 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import{ getFirebaseApp } from '../../firebase/firebase';
 import { createGame, getPossibleGenres } from '../../firebase/server';
 import PageWrapper from '../../components/page_wrapper';
+import LoadingWrapper from '../../components/loading_wrapper';
 import Auth from '../../components/auth';
 import HeadsetIcon from '@material-ui/icons/Headset';
 import inputStyles from '../../styles/styles';
@@ -19,6 +20,7 @@ function CreateGame({ player }) {
     const router = useRouter();
     const [name, setName] = useState("");
     const [genre, setGenre] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const [nameLabel, setNameLabel] = useState("Game Name")
     const [buttonDisabled, setButtonDisabled] = useState(true);
@@ -50,6 +52,7 @@ function CreateGame({ player }) {
     }
 
     const handleCreateGame = () => {
+      setLoading(true);
       const userId = FirebaseApp.auth().currentUser?.uid;
       const userName = FirebaseApp.auth().currentUser?.displayName;
       console.log("Creating new game with params:", name, genre, userId, userName);
@@ -60,13 +63,16 @@ function CreateGame({ player }) {
                 gameId: docId
             }
         });
+      }).catch(err => {
+          console.log(err);
       });
     }
     
     return (
+        <PageWrapper>
         <Auth>
-          <PageWrapper>
-            <Container maxWidth="sm">
+        <LoadingWrapper loading={loading}>
+        <Container maxWidth="sm">
               <Autocomplete
                 id="combo-box"
                 className={classes.inputChild}
@@ -106,8 +112,10 @@ function CreateGame({ player }) {
                 PLAY
               </Fab>
             </Container>
-          </PageWrapper>
+        </LoadingWrapper>
         </Auth>
+        </PageWrapper>
+        
       )
 }
 

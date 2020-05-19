@@ -11,7 +11,7 @@ import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
 import AnswerList from '../../components/answers';
 import Leaderboard from '../../components/leaderboard';
-import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
+import { createStyles, Theme, withStyles, ServerStyleSheets } from '@material-ui/core/styles';
 
 const FirebaseApp = getFirebaseApp();
 
@@ -46,6 +46,7 @@ interface State {
     roundInSession?: boolean;
     gameEnded?: boolean;
     leaderboard?: any;
+    roundAnswers?: any[];
 
 };
 
@@ -56,6 +57,8 @@ interface Props {
 
 class PlayGame extends Component<Props, State> {
     timingEvents: TimeEvent[];
+    timerInterval: number;
+    intervalTimeoutId: NodeJS.Timeout;
 
      constructor(props) {
         super(props);
@@ -68,8 +71,11 @@ class PlayGame extends Component<Props, State> {
             roundDuration: 10000,
             roundInSession: false,
             gameEnded: false,
-            leaderboard: []
+            leaderboard: [],
+            roundAnswers: [],
         };
+
+        this.timerInterval = 100;
 
         FirebaseApp.firestore().collection("games").doc(this.props.gameId)
             .onSnapshot((doc) => {
@@ -97,11 +103,68 @@ class PlayGame extends Component<Props, State> {
      startGameClicked() {
          server.startGame(this.props.gameId);
      }
+     
+     /**
+      * Event handler for the main interval timer timeout. Responsible
+      * for updating the countdown timer and any game content transitions
+      * (i.e. round -> intermission).
+      */
+     updateGameEventHandler() {
+        if (!this.timingEvents.length) {
+            return;
+        }
+        const {time, round, event} = this.timingEvents[0];
+        const now = new Date().getTime();
+        const remainingTime = time - now;
 
+        if (remainingTime < 0) {
+            this.timingEvents.shift();
+            if (this.timingEvents.length === 0) {
+                // end game!
+                clearInterval(this.intervalTimeoutId);
+                this.setState({gameEnded: true})
+                return;
+            }
+            // change display (start/end round)
+            const {event, round} = this.timingEvents[0];
+            if (event === EventType.START) {
+                // intermission
+                this.setState({
+                    songUrl: "",
+                    playing: false,
+                })
+            } else {
+                // round
+                this.setState({
+                    currentRound: round,
+                    songUrl: this.state.rounds[round-1]?.url,
+                    playing: true,
+                    roundAnswers: this.getRoundAnswers(round-1),
+                })
+            }
+
+            if (remainingTime < this.timerInterval) {
+                clearInterval(this.intervalTimeoutId);
+                setInterval(this.updateGameEventHandler.bind(this))
+            }
+        } else {
+            this.setState({
+                countdownMessage: `Round ${round}/${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
+            })
+        }
+    }
+
+    /**
+     * Creates all of the game events and times based on the provided
+     * start time and round/intermission durations. Starts the main game
+     * interval timer for all game events.
+     * @param startTime UTC time (milliseconds since unix epoch)
+     */
      startGame(startTime: number) {
         const {roundDuration, intermissionDuration, numberOfRounds} = this.state;
-        const timingEvents: TimeEvent[] = [];
 
+        // Set up timing events for the start and end of each round
+        const timingEvents: TimeEvent[] = [];
         let future = startTime;
         for (let i = 0; i < numberOfRounds; ++i) {
             future += (i === 0) ? 0 : intermissionDuration;
@@ -126,51 +189,28 @@ class PlayGame extends Component<Props, State> {
             currentRound: 1,
         })
 
-        const interval = setInterval(() => {
-            if (!timingEvents.length) {
-                return;
-            }
-            const {time, round, event} = timingEvents[0];
-            const now = new Date().getTime();
-            const remainingTime = time - now;
-            if (remainingTime < 0) {
-                timingEvents.shift();
-                if (timingEvents.length === 0) {
-                    // end game!
-                    clearInterval(interval);
-                    this.setState({gameEnded: true})
-                    return;
-                }
-                // change display (start/end round)
-                const {event, round} = timingEvents[0];
-                if (event === EventType.START) {
-                    // intermission
-                    this.setState({
-                        songUrl: "",
-                        playing: false,
-                    })
-                } else {
-                    // round
-                    this.setState({
-                        currentRound: round,
-                        songUrl: this.state.rounds[round-1]?.url,
-                        playing: true,
-                    })
-
-                }
-            } else {
-                this.setState({
-                    countdownMessage: `Round ${round}/${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
-                })
-            }
-        }, 100);
+        this.intervalTimeoutId = setInterval(this.updateGameEventHandler.bind(this), this.timerInterval);
      }
 
-     getRoundAnswers() {
-        const roundIdx = this.state.currentRound - 1;
-        
-        return this.state.rounds[roundIdx].tracks.map((track) => {
-            return {id: track.id, displayText: track.title, isCorrect: track.isAnswer};
+    // Fisher-Yates Shuffle
+    shuffleAnswers(answers) {
+        for (let i = answers.length - 1; i > 0; --i) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [answers[i], answers[j]] = [answers[j], answers[i]];
+        }
+
+        return answers;
+    }
+
+     /**
+      * Creates answer objects to be baswer to AnswerList component
+      * based on the answers for the given round index.
+      * @param roundIndex index of current round (0-based)
+      */
+     getRoundAnswers(roundIdx) {
+        return this.shuffleAnswers(this.state.rounds[roundIdx].tracks).map((track) => {
+            const answerText = `${track.title} - ${track.artists.join(", ")}`;
+            return {id: track.id, displayText: track.title, isCorrect: track.isAnswer, answerText};
         });
      }
 
@@ -200,7 +240,7 @@ class PlayGame extends Component<Props, State> {
                 <img src="/music-gif.gif"/>
                 <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
                 <p className="description">What is the name of this tune?</p>
-                <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
+                <AnswerList answers={this.state.roundAnswers} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
                 </>
                 }
                 </>
