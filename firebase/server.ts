@@ -234,6 +234,28 @@ function isUserInGame(gameId: string, userId: string): Promise<boolean> {
         })
 }
 
+function getGameIdByGameCode(gameCode: string): Promise<string> {
+    return getFirebaseApp().firestore().collection("games")
+        .where("gameCode", "==", gameCode)
+        .get()
+        .then(games => {
+            if (games.empty) {
+                return Promise.reject(`Game code ${gameCode} is invalid.`)
+            }
+            else if (games.size > 1) {
+                return Promise.reject(`Game code ${gameCode} is not unique.`)
+            } 
+            else {
+                return games.docs[0].id;
+            }
+        })
+        .then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        })
+}
+
 export {
     doesGameNameExist,
     getPossibleGenres,
@@ -245,5 +267,6 @@ export {
     endGame,
     leaveGame,
     increasePlayerScore,
-    isUserInGame
+    isUserInGame,
+    getGameIdByGameCode
 };

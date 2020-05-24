@@ -733,3 +733,90 @@ describe("leaveGame", () => {
         });
     });
 });
+
+describe("getGameIdByGameCode", () => {
+
+    it('found gameId associated with unique gameCode', () => {
+        const returnedGames = {
+            empty: false,
+            size: 1,
+            docs: [
+                {
+                    gameCode: '1A2B3C',
+                    id: 'g001'
+                }
+            ]
+        };
+        const gameCode = '1A2B3C'
+        const expectedGameId = 'g001';
+        const mockGet = jest.fn().mockResolvedValue(returnedGames);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet,
+                    })
+                })
+            })
+        });
+
+        return server.getGameIdByGameCode(gameCode).then(res => {
+            expect(res).toEqual(expectedGameId);
+        });
+    });
+
+    it('Found no games with specified gameCode', () => {
+        const returnedGames = {
+            empty: true
+        };
+        const gameCode = '1A2B3C'
+        const expectedResponse = `Game code ${gameCode} is invalid.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGames);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet,
+                    })
+                })
+            })
+        });
+
+        return server.getGameIdByGameCode(gameCode).then(res => {
+            expect(res).toEqual(expectedResponse);
+        });
+    });
+
+    it('found gameCode collision', () => {
+        const returnedGames = {
+            empty: false,
+            size: 2,
+            docs: [ 
+                {
+                    gameCode: '1A2B3C',
+                    id: 'g001'
+                },
+                {
+                    gameCode: '1A2B3C',
+                    id: 'g002'
+                }
+            ]
+        };
+        const gameCode = '1A2B3C'
+        const expectedResponse = `Game code ${gameCode} is not unique.`
+        const mockGet = jest.fn().mockResolvedValue(returnedGames);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet,
+                    })
+                })
+            })
+        });
+
+        return server.getGameIdByGameCode(gameCode).then(res => {
+            expect(res).toEqual(expectedResponse);
+        });
+    });
+});
