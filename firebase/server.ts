@@ -1,13 +1,19 @@
 import { AxiosRequestConfig } from 'axios';
 import axios from 'axios'
+import base32 from 'base32'
 import { getFirebaseApp } from './firebase'
 import { availableGenres } from './available_genres'
 
-const MAX_PLAYERS_PER_GAME = 4
+const MAX_PLAYERS_PER_GAME = 4;
+const GAME_CODE_LENGTH = 6;
 
-function createGame(gameName: string, gamePassword: string, gameGenre: string, hostName: string, hostId: string) {
+function createGame(gameName: string, gameGenre: string, hostName: string, hostId: string) {
     return doesGameNameExist(gameName).then((_) => {
         console.log('game name does not exist, creating new game')
+        const gameCode = generateGameCode();
+        if(gameName === "" || gameName == null){
+            gameName = `${hostName}'s Game`;    // Set gameName if not passed
+        }
         const ganerateGameContentEndPoint = "https://us-central1-tuneiq.cloudfunctions.net/generateGameContent"
         const generateGameContentConfig: AxiosRequestConfig = {
             url: ganerateGameContentEndPoint,
@@ -17,7 +23,7 @@ function createGame(gameName: string, gamePassword: string, gameGenre: string, h
                 genre: gameGenre,
                 hostId: hostId,
                 hostName: hostName,
-                password: gamePassword,
+                gameCode: gameCode,
                 name: gameName
             }
         };
@@ -39,6 +45,13 @@ function createGame(gameName: string, gamePassword: string, gameGenre: string, h
             return Promise.reject(error)
         })
     });
+}
+
+function generateGameCode(){
+    const message = (Math.random() * Date.now()).toString()    // Message computed from pseudo-random number and Epoch time
+    const sha1Digest = base32.sha1(message);                                  // Get run date through SHA1 hash function
+    const gameCode = sha1Digest.substring(0, GAME_CODE_LENGTH).toUpperCase(); // Game code will be first few chars of digest
+    return gameCode;
 }
 
 function doesGameNameExist(name) {
@@ -70,17 +83,17 @@ function getPossibleGenres() {
         });
 }
 
-function attemptToJoinGame(gameName: string, gamePassword: string, playerId: string, playerName: string) {
+function attemptToJoinGame(gameName: string, gameCode: string, playerId: string, playerName: string) {
     return getFirebaseApp().firestore().collection("games")
         .where("name", "==", gameName)
         .get().then((games) => {
             console.log(games)
             const gameId = games.docs[0].id;
             console.log(games.docs[0].data());
-            if (gamePassword === games.docs[0].data().password) {
+            if (gameCode === games.docs[0].data().gameCode) {
                 return joinGame(gameId, playerId, playerName);
             } else {
-                return Promise.reject({ field: "password", message: "Invalid password." });
+                return Promise.reject({ field: "gameCode", message: "Invalid game code." });
             }
 
         }).catch((err) => (Promise.reject({ field: "gameName", message: "Game does not exist." })));
@@ -268,5 +281,6 @@ export {
     leaveGame,
     increasePlayerScore,
     isUserInGame,
-    getGameIdByGameCode
+    getGameIdByGameCode,
+    generateGameCode
 };
