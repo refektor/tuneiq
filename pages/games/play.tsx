@@ -217,6 +217,13 @@ class PlayGame extends Component<Props, State> {
         const {time} = this.timingEvents[0];
         const now = new Date().getTime();
         const remainingTime = time - now;
+
+        // We check if the remaining time in the round is negative because
+        // there is a chance that we receive this signal after the round has completed.
+        if (remainingTime < 0) {
+            return;
+        }
+        
         const roundDuration = this.state.roundDuration;
         const pctRoundRemaining = remainingTime / roundDuration;
 
