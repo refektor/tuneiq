@@ -53,37 +53,37 @@ export default function JoinGame() {
     return (
       <PageWrapper>
         <Auth>
-        <LoadingWrapper loading={loading}>
-        <TextField 
-        id="standard-name" 
-        label={nameLabel} 
-        value={name} 
-        autoComplete="off" 
-        error={nameError} 
-        className={classes.inputChild}
-        onChange={handleNameChange} 
-        />
-        <TextField 
-        id="standard-password-input" 
-        label="Password" 
-        type="password" 
-        autoComplete="off"
-        className={classes.inputChild} 
-        value={password} 
-        error={passError} 
-        onChange={handlePasswordChange} 
-        />
-        <Fab
-        variant="extended"
-        color="primary"
-        size="large"
-        className={classes.button}
-        onClick={joinGame}
-        >
-        <PlayArrowIcon />
-        JOIN
-        </Fab>
-        </LoadingWrapper>
+            <LoadingWrapper loading={loading}>
+                <TextField 
+                id="standard-name" 
+                label={nameLabel} 
+                value={name} 
+                autoComplete="off" 
+                error={nameError} 
+                className={classes.inputChild}
+                onChange={handleNameChange} 
+                />
+                <TextField 
+                id="standard-password-input" 
+                label="Password" 
+                type="password" 
+                autoComplete="off"
+                className={classes.inputChild} 
+                value={password} 
+                error={passError} 
+                onChange={handlePasswordChange} 
+                />
+                <Fab
+                variant="extended"
+                color="primary"
+                size="large"
+                className={classes.button}
+                onClick={joinGame}
+                >
+                <PlayArrowIcon />
+                JOIN
+                </Fab>
+            </LoadingWrapper>
         </Auth>
     </PageWrapper>
     );

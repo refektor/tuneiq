@@ -1,17 +1,16 @@
 /**
  * Page repsonsible for hosting the game content.
  */
-import { Fragment, Component } from "react";
+import { Component } from "react";
 import ReactPlayer from 'react-player'
-import { Button, Drawer } from '@material-ui/core';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import { Button } from '@material-ui/core';
 import {getFirebaseApp} from '../../firebase/firebase';
 import * as server from '../../firebase/server';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
 import AnswerList from '../../components/answers';
 import Leaderboard from '../../components/leaderboard';
-import { createStyles, Theme, withStyles, ServerStyleSheets } from '@material-ui/core/styles';
+import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 
 const FirebaseApp = getFirebaseApp();
 
