@@ -1,6 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import axios from 'axios'
-import base32 from 'base32'
+import Hashes from 'jshashes'
+import base32 from 'hi-base32'
 import { getFirebaseApp } from './firebase'
 import { availableGenres } from './available_genres'
 
@@ -11,7 +12,7 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
     return doesGameNameExist(gameName).then((_) => {
         console.log('game name does not exist, creating new game')
         const gameCode = generateGameCode();
-        if(gameName === "" || gameName == null){
+        if(!gameName){
             gameName = `${hostName}'s Game`;    // Set gameName if not passed
         }
         const ganerateGameContentEndPoint = "https://us-central1-tuneiq.cloudfunctions.net/generateGameContent"
@@ -49,8 +50,19 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
 
 function generateGameCode(){
     const message = (Math.random() * Date.now()).toString()    // Message computed from pseudo-random number and Epoch time
-    const sha1Digest = base32.sha1(message);                                  // Get run date through SHA1 hash function
-    const gameCode = sha1Digest.substring(0, GAME_CODE_LENGTH).toUpperCase(); // Game code will be first few chars of digest
+    var hexSHA256Digest = new Hashes.SHA256().hex(message);    // Run message through SHA256 hash function
+
+    // Convert to byte array
+    if (hexSHA256Digest.length % 2 !== 0) {
+        hexSHA256Digest = '0' + hexSHA256Digest;
+    }
+    var digestBytes = [];
+    for (var i = 0; i < hexSHA256Digest.length; i = i + 2) {
+        digestBytes.push(parseInt(hexSHA256Digest.slice(i, i + 2), 16));
+    }
+
+    const b32SHA256Digest = base32.encode(digestBytes);       // Encode as base32
+    const gameCode = b32SHA256Digest.substring(0, GAME_CODE_LENGTH).toUpperCase(); // Game code is first few chars of digest
     return gameCode;
 }
 
