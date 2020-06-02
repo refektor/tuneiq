@@ -77,7 +77,7 @@ function CreateGame({ player }) {
       const userId = FirebaseApp.auth().currentUser?.uid;
       const userName = FirebaseApp.auth().currentUser?.displayName;
       console.log("Creating new game with params:", name, hashedPassword, genre, userId, userName);
-      createGame(name, password, genre, userName, userId).then((docId) => {
+      createGame(name, genre, userName, userId).then((docId) => {
         router.push({
             pathname: "/games/play",
             query: {

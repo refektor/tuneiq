@@ -91,6 +91,7 @@ function getPossibleGenres() {
             return {
                 name: genre,
                 supported: supportedGenres.includes(genre),
+                img: '',
             }
         });
 }
