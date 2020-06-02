@@ -1,5 +1,21 @@
-import React from 'react';
-import { Box, Drawer, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, makeStyles, Avatar, ListItemSecondaryAction } from '@material-ui/core';
+import React, { useState } from 'react';
+import clsx from 'clsx';
+import { 
+    Box, 
+    Drawer, 
+    Typography, 
+    List, 
+    ListItem, 
+    ListItemIcon, 
+    ListItemText, 
+    IconButton,
+    Divider, 
+    makeStyles, 
+    Avatar, 
+    ListItemSecondaryAction 
+} from '@material-ui/core';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import MenuIcon from '@material-ui/icons/Menu';
 
 const drawerWidth = 300;
 
@@ -16,15 +32,62 @@ const useStyles = makeStyles((theme) => ({
     drawerPaper: {
         width: drawerWidth,
     },
+
+    leaderButton: {
+        margin: theme.spacing(0, 'auto')
+    },
+
+    leaderTitle: {
+        padding: "8px",
+    },
     
-    leaderboard: {
-        display: 'inline-block',
-        margin: theme.spacing(6, 'auto')
-    }
+    hide: {
+        display: 'none',
+    },
+
+    left: {
+        float: "left"
+    },
+
+    right: {
+        position: "absolute",
+        width: "75%",
+        right: 0
+    },
+
+    drawerOpen: {
+        width: drawerWidth,
+        transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    },
+    
+    drawerClose: {
+        transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+        }),
+        overflowX: 'hidden',
+        width: theme.spacing(7) + 1,
+        [theme.breakpoints.up('sm')]: {
+            width: theme.spacing(9) + 1,
+        },
+    },
 }));
 
 export default function Leaderboard({ leaderboard }) {
     const classes = useStyles();
+    const [open, setOpen] = useState(false);
+
+    const handleDrawerOpen = () => {
+      setOpen(true);
+    };
+  
+    const handleDrawerClose = () => {
+      setOpen(false);
+    };
+
     if (leaderboard) {
         leaderboard.sort((a,b) => {return b.score - a.score });
     }
@@ -32,26 +95,73 @@ export default function Leaderboard({ leaderboard }) {
     return (
         <Box overflow="hidden" className={classes.root}>
             <Drawer
-                className={classes.drawer}
                 variant="permanent"
-                classes={{
-                    paper: classes.drawerPaper,
-                }}
                 anchor="right"
+                className={clsx(classes.drawer, {
+                    [classes.drawerOpen]: open,
+                    [classes.drawerClose]: !open,
+                })}
+                classes={{
+                    paper: clsx({
+                      [classes.drawerOpen]: open,
+                      [classes.drawerClose]: !open,
+                    }),
+                }}
             >
-                <Typography variant="h6" className={classes.leaderboard}>
-                    Leaderboard
-                </Typography>
+                <IconButton
+                    aria-label="open drawer"
+                    onClick={handleDrawerOpen}
+                    className={clsx(
+                        classes.leaderButton, {
+                        [classes.hide]: open,
+                    })}
+                >
+                    <MenuIcon />
+                </IconButton>
+
+                <div>
+                    <IconButton
+                        aria-label="close drawer"
+                        onClick={handleDrawerClose}
+                        className={clsx(
+                            classes.left, {
+                            [classes.hide]: !open,
+                        })}
+                    >
+                        <ChevronRightIcon />
+                    </IconButton>
+                    <Typography 
+                        variant="h6"
+                        className={clsx(
+                            classes.leaderTitle,
+                            classes.right, {
+                            [classes.hide]: !open,
+                        })}
+                    >
+                        Leaderboard
+                    </Typography>
+                </div>
+                
                 <Divider />
                 <List id="leaderboard">
-                {leaderboard && leaderboard.map((player, index) => (
+                {leaderboard && leaderboard.map((player) => (
                     <ListItem key={player.name}>
                         <ListItemIcon>
                             <Avatar>{player.name.substring(0,1).toUpperCase()}</Avatar>
                         </ListItemIcon>
-                        <ListItemText primary={player.name} />
+                        <ListItemText 
+                            primary={player.name}
+                            className={clsx({
+                                [classes.hide]: !open,
+                            })}
+                        />
                         <ListItemSecondaryAction>
-                        <ListItemText primary={player.score}/>
+                        <ListItemText 
+                            primary={player.score}
+                            className={clsx({
+                                [classes.hide]: !open,
+                            })}
+                        />
                         </ListItemSecondaryAction>
                     </ListItem>
                 ))}
