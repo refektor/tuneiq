@@ -35,12 +35,12 @@ export default function GenrePicker({ onPicked }) {
                             <Button >
                                 <img 
                                     style={{ width: 75, height: 75}}
-                                    alt={item.genre} 
+                                    alt={item.name} 
                                     src={item.img}
-                                    onClick={() => onPicked(item.genre)} />
+                                    onClick={() => onPicked(item.name)} />
                             </Button>
                             <Typography key={index} className={classes.text} variant="caption" color="textSecondary">
-                                {item.genre}
+                                {item.name}
                             </Typography>
                         </Box>
                     ) : (
