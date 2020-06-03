@@ -3,9 +3,8 @@ import { useRouter } from 'next/router'
 import { Container, TextField, Fab } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import * as hash from 'password-hash';
 import{ getFirebaseApp } from '../../firebase/firebase';
-import { createGame, doesGameNameExist, getPossibleGenres } from '../../firebase/server';
+import { createGame, getPossibleGenres } from '../../firebase/server';
 import PageWrapper from '../../components/page_wrapper';
 import Auth from '../../components/auth';
 import HeadsetIcon from '@material-ui/icons/Headset';
@@ -20,36 +19,25 @@ function CreateGame({ player }) {
     const router = useRouter();
     const [name, setName] = useState("");
     const [genre, setGenre] = useState(null);
-    const [password, setPassword] = useState("");
 
     const [nameLabel, setNameLabel] = useState("Game Name")
-    const [nameError, setNameError] = useState(false);
     const [buttonDisabled, setButtonDisabled] = useState(true);
 
     const handleNameChange = (e) => {
       const currentName = e.target.value;
       setName(currentName);
-      doesGameNameExist(currentName)
-        .then((_) => {
-          setNameError(false)
-          setNameLabel("Game Name");
-          if (!nameError && currentName.length && password && genre) {
-            setButtonDisabled(false);
-          } else {
-            setButtonDisabled(true);
-          }
-        })
-        .catch((err) => {
-          setNameError(true);
-          setNameLabel("Game name is already taken");
-          setButtonDisabled(true);
-      });
+      setNameLabel("Game Name");
+      if (genre) {
+        setButtonDisabled(false);
+      } else {
+        setButtonDisabled(true);
+      }
     }
 
     const handleGenreChange = (selectedGenre) => {
       setGenre(selectedGenre['name']);
       
-      if (!nameError && name && password && selectedGenre['name'].length) {
+      if (selectedGenre['name'].length) {
         setButtonDisabled(false);
       } else {
         setButtonDisabled(true);
@@ -61,22 +49,10 @@ function CreateGame({ player }) {
       return <HeadsetIcon id={`dropdown_${genre}`} />
     }
 
-    const handlePasswordChange = (e) => {
-      const password = e.target.value;
-      setPassword(password);
-
-      if (!nameError && name && password.length && genre) {
-        setButtonDisabled(false);
-      } else {
-        setButtonDisabled(true);
-      }
-    }
-
     const handleCreateGame = () => {
-      const hashedPassword = hash.generate(password);
       const userId = FirebaseApp.auth().currentUser?.uid;
       const userName = FirebaseApp.auth().currentUser?.displayName;
-      console.log("Creating new game with params:", name, hashedPassword, genre, userId, userName);
+      console.log("Creating new game with params:", name, genre, userId, userName);
       createGame(name, genre, userName, userId).then((docId) => {
         router.push({
             pathname: "/games/play",
@@ -91,24 +67,6 @@ function CreateGame({ player }) {
         <Auth>
           <PageWrapper>
             <Container maxWidth="sm">
-              <TextField 
-                id="standard-name" 
-                label={nameLabel} 
-                value={name} 
-                autoComplete="off" 
-                error={nameError} 
-                onChange={handleNameChange}
-                className={classes.inputChild}
-              />
-              <TextField 
-                id="standard-password-input" 
-                label="Password" 
-                type="password" 
-                autoComplete="off" 
-                value={password}
-                className={classes.inputChild}
-                onChange={handlePasswordChange} 
-              />
               <Autocomplete
                 id="combo-box"
                 className={classes.inputChild}
@@ -127,6 +85,14 @@ function CreateGame({ player }) {
                   (params) => 
                     <TextField className={classes.genreText} {...params} label="Genre" />
                 }
+              />
+              <TextField 
+                id="standard-name" 
+                label={nameLabel} 
+                value={name} 
+                autoComplete="off" 
+                onChange={handleNameChange}
+                className={classes.inputChild}
               />
               <Fab
                 variant="extended"
