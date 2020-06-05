@@ -17,13 +17,11 @@ describe("createGame", () => {
     it("successfully create game with valid params", () => {
         const expectedGameId = { id: "6969696969" }
         const gameName = "daveEnjoysBubbleBaths"
-        const password = "dmon"
         const hostId = "2323"
         const hostName = "david"
         const gameGenre = "classical"
         const expectedGameDetails = {
             name: gameName,
-            password: password,
             hostId: hostId,
             intermissionDuration: NaN,
             roundDuration: NaN,
@@ -57,7 +55,54 @@ describe("createGame", () => {
 
         mockedAxios.request.mockResolvedValue(mockedAxiosReponse)
 
-        return server.createGame(gameName, password, gameGenre, hostName, hostId).then(res => {
+        return server.createGame(gameName, gameGenre, hostName, hostId).then(res => {
+            expect(mockAdd).toHaveBeenCalledWith(expectedGameDetails)
+            expect(res).toEqual(expectedGameId.id)
+        })
+    });
+
+    it("successfully create game with valid params when gameName is missing", () => {
+        const expectedGameId = { id: "6969696969" }
+        const gameName = null
+        const hostId = "2323"
+        const hostName = "david"
+        const gameGenre = "classical"
+        const expectedGameDetails = {
+            name: `${hostName}'s Game`,
+            hostId: hostId,
+            intermissionDuration: NaN,
+            roundDuration: NaN,
+            startTime: null,
+            genre: gameGenre,
+            rounds: [],
+            leaderBoard: {
+                [hostId]: {
+                    name: hostName,
+                    score: 0
+                }
+            }
+        };
+        const mockedAxios = axios as jest.Mocked<AxiosStatic>
+        const mockedAxiosReponse = {
+            data: expectedGameDetails
+        }
+        const mockAdd = jest.fn().mockResolvedValue(expectedGameId);
+        const mockGet = jest.fn().mockResolvedValue({ empty: true });
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet
+                    }),
+                    add: mockAdd,
+                })
+            })
+        });
+
+
+        mockedAxios.request.mockResolvedValue(mockedAxiosReponse)
+
+        return server.createGame(gameName, gameGenre, hostName, hostId).then(res => {
             expect(mockAdd).toHaveBeenCalledWith(expectedGameDetails)
             expect(res).toEqual(expectedGameId.id)
         })
@@ -65,7 +110,6 @@ describe("createGame", () => {
 
     it("fails to create game with game name already exists error", () => {
         const gameName = "asssah";
-        const password = "dmon";
         const hostId = "2323";
         const hostName = "david";
         const gameGenre = "classical";
@@ -81,7 +125,7 @@ describe("createGame", () => {
             })
         });
 
-        return server.createGame(gameName, password, gameGenre, hostName, hostId).catch(error => {
+        return server.createGame(gameName, gameGenre, hostName, hostId).catch(error => {
             expect(error).toEqual(expectedMessage)
         })
     });
@@ -90,13 +134,11 @@ describe("createGame", () => {
         const expectedErrorMessage = "Database Writing error";
         const ecpectedError = new Error(expectedErrorMessage)
         const gameName = "daveEnjoysBubbleBaths"
-        const password = "dmon"
         const hostId = "2323"
         const hostName = "david"
         const gameGenre = "classical"
         const expectedGameDetails = {
             name: gameName,
-            password: password,
             hostId: hostId,
             intermissionDuration: NaN,
             roundDuration: NaN,
@@ -132,7 +174,7 @@ describe("createGame", () => {
             })
         });
 
-        return server.createGame(gameName, password, gameGenre, hostName, hostId).catch(error => {
+        return server.createGame(gameName, gameGenre, hostName, hostId).catch(error => {
             expect(mockAdd).toHaveBeenCalledWith(expectedGameDetails)
             expect(error).toEqual(ecpectedError)
         })
@@ -731,5 +773,112 @@ describe("leaveGame", () => {
         return server.leaveGame(gameId, leavingPlayerId).then(res => {
             expect(res).toEqual(expectedResponse);
         });
+    });
+});
+
+describe("getGameIdByGameCode", () => {
+
+    it('found gameId associated with unique gameCode', () => {
+        const returnedGames = {
+            empty: false,
+            size: 1,
+            docs: [
+                {
+                    gameCode: '1A2B3C',
+                    id: 'g001'
+                }
+            ]
+        };
+        const gameCode = '1A2B3C'
+        const expectedGameId = 'g001';
+        const mockGet = jest.fn().mockResolvedValue(returnedGames);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet,
+                    })
+                })
+            })
+        });
+
+        return server.getGameIdByGameCode(gameCode).then(res => {
+            expect(res).toEqual(expectedGameId);
+        });
+    });
+
+    it('Found no games with specified gameCode', () => {
+        const returnedGames = {
+            empty: true
+        };
+        const gameCode = '1A2B3C'
+        const expectedResponse = `Game code ${gameCode} is invalid.`;
+        const mockGet = jest.fn().mockResolvedValue(returnedGames);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet,
+                    })
+                })
+            })
+        });
+
+        return server.getGameIdByGameCode(gameCode).then(res => {
+            expect(res).toEqual(expectedResponse);
+        });
+    });
+
+    it('found gameCode collision', () => {
+        const returnedGames = {
+            empty: false,
+            size: 2,
+            docs: [ 
+                {
+                    gameCode: '1A2B3C',
+                    id: 'g001'
+                },
+                {
+                    gameCode: '1A2B3C',
+                    id: 'g002'
+                }
+            ]
+        };
+        const gameCode = '1A2B3C'
+        const expectedResponse = `Game code ${gameCode} is not unique.`
+        const mockGet = jest.fn().mockResolvedValue(returnedGames);
+        (getFirebaseApp as jest.Mock).mockReturnValue({
+            firestore: () => ({
+                collection: () => ({
+                    where: () => ({
+                        get: mockGet,
+                    })
+                })
+            })
+        });
+
+        return server.getGameIdByGameCode(gameCode).then(res => {
+            expect(res).toEqual(expectedResponse);
+        });
+    });
+});
+
+describe("generateGameCode", () => {
+
+    it('Created several unique game codes', () => {
+        const numUniqueCodes = 2 ** 14  // With 6 chars of Base32 hash, can expect collision after 2^15 hashes
+        var gameCodes = [];
+        var passed = true;
+        for(var i = 0; i < numUniqueCodes; i++){
+            gameCodes.push(server.generateGameCode())
+        }
+        passed = (new Set(gameCodes)).size == gameCodes.length
+        if (passed) {
+            console.log(`Generated ${numUniqueCodes} unique game codes.`);
+        }
+        else {
+            console.log(`Generation of ${numUniqueCodes} unique game codes yielded >= 1 collisions.`);
+        }
+        expect(passed).toEqual(true);
     });
 });
