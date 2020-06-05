@@ -1,9 +1,9 @@
+import React, { useState } from "react";
 import { TextField, Fab } from '@material-ui/core';
-import { useState } from "react";
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PageWrapper from '../../components/page_wrapper';
-import Auth from '../../components/auth'
+import Auth from '../../components/auth';
 import inputStyles from '../../styles/styles';
 import * as server from '../../firebase/server';
 import { getFirebaseApp } from '../../firebase/firebase';

@@ -74,6 +74,25 @@ const useStyles = makeStyles((theme) => ({
             width: theme.spacing(9) + 1,
         },
     },
+
+    playerContainer: {
+        padding: 0
+    },
+
+    avatar: {
+        margin: theme.spacing(0, 'auto')
+    },
+
+    scoreRoot: {
+        minWidth: "56px", // similar to avatar based on browser testing
+        position: "inherit", //get rid of absolute position
+        right: 0,
+        transform: "none"
+    },
+
+    scoreText: {
+        textAlign: "center"
+    }
 }));
 
 export default function Leaderboard({ leaderboard }) {
@@ -145,9 +164,14 @@ export default function Leaderboard({ leaderboard }) {
                 <Divider />
                 <List id="leaderboard">
                 {leaderboard && leaderboard.map((player) => (
-                    <ListItem key={player.name}>
+                    <ListItem 
+                        key={player.name}
+                        className={clsx({
+                            [classes.playerContainer]: !open,
+                        })}
+                    >
                         <ListItemIcon>
-                            <Avatar>{player.name.substring(0,1).toUpperCase()}</Avatar>
+                            <Avatar className={classes.avatar}>{player.name.substring(0,1).toUpperCase()}</Avatar>
                         </ListItemIcon>
                         <ListItemText 
                             primary={player.name}
@@ -155,13 +179,17 @@ export default function Leaderboard({ leaderboard }) {
                                 [classes.hide]: !open,
                             })}
                         />
-                        <ListItemSecondaryAction>
-                        <ListItemText 
-                            primary={player.score}
+                        <ListItemSecondaryAction
                             className={clsx({
-                                [classes.hide]: !open,
+                                [classes.scoreRoot]: !open,
                             })}
-                        />
+                        >
+                            <ListItemText 
+                                primary={player.score}
+                                className={clsx({
+                                    [classes.scoreText]: !open,
+                                })}
+                            />
                         </ListItemSecondaryAction>
                     </ListItem>
                 ))}
