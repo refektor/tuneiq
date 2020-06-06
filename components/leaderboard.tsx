@@ -56,6 +56,7 @@ const useStyles = makeStyles((theme) => ({
     },
 
     drawerOpen: {
+        background: "#FFF5EE",
         width: drawerWidth,
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
@@ -64,6 +65,7 @@ const useStyles = makeStyles((theme) => ({
     },
     
     drawerClose: {
+        background: "#FFF5EE",
         transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
@@ -81,6 +83,12 @@ const useStyles = makeStyles((theme) => ({
 
     avatar: {
         margin: theme.spacing(0, 'auto')
+    },
+
+    leaderboardItemRoot: {
+        [theme.breakpoints.up('sm')]: {
+            minWidth: "73px",
+        },
     },
 
     scoreRoot: {
@@ -170,7 +178,11 @@ export default function Leaderboard({ leaderboard }) {
                             [classes.playerContainer]: !open,
                         })}
                     >
-                        <ListItemIcon>
+                        <ListItemIcon
+                            className={clsx({
+                                [classes.leaderboardItemRoot]: !open,
+                            })}
+                        >
                             <Avatar className={classes.avatar}>{player.name.substring(0,1).toUpperCase()}</Avatar>
                         </ListItemIcon>
                         <ListItemText 
@@ -182,6 +194,7 @@ export default function Leaderboard({ leaderboard }) {
                         <ListItemSecondaryAction
                             className={clsx({
                                 [classes.scoreRoot]: !open,
+                                [classes.leaderboardItemRoot]: !open,
                             })}
                         >
                             <ListItemText 

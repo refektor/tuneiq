@@ -30,7 +30,6 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
         };
 
         return axios.request(generateGameContentConfig).then(gameDetails => {
-            console.log(gameDetails.data)
             return getFirebaseApp().firestore().collection("games")
                 .add(gameDetails.data)
                 .then((docRef) => {
