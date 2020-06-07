@@ -4,6 +4,7 @@
 import { Component } from "react";
 import ReactPlayer from 'react-player'
 import { Button } from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import {getFirebaseApp} from '../../firebase/firebase';
 import * as server from '../../firebase/server';
 import Auth from '../../components/auth';
@@ -15,9 +16,11 @@ import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 const FirebaseApp = getFirebaseApp();
 
 const useStyles = (theme: Theme) =>
-  createStyles({
-    
-  });
+    createStyles({
+            emphasisText: {
+                color: theme.palette.primary.main,
+            }
+    });
 
 enum EventType {
     START = "starts",
@@ -46,7 +49,7 @@ interface State {
     gameEnded?: boolean;
     leaderboard?: any;
     roundAnswers?: any[];
-
+    roundProgress?: number;
 };
 
 interface Props {
@@ -131,6 +134,7 @@ class PlayGame extends Component<Props, State> {
                 this.setState({
                     songUrl: "",
                     playing: false,
+                    roundProgress: 100,
                 })
             } else {
                 // round
@@ -139,6 +143,7 @@ class PlayGame extends Component<Props, State> {
                     songUrl: this.state.rounds[round-1]?.url,
                     playing: true,
                     roundAnswers: this.getRoundAnswers(round-1),
+                    roundProgress: 100,
                 })
             }
 
@@ -147,8 +152,16 @@ class PlayGame extends Component<Props, State> {
                 setInterval(this.updateGameEventHandler.bind(this))
             }
         } else {
+            let roundProgress = 100;
+            if (event === EventType.START) {
+                // intermission
+                roundProgress = Math.ceil((remainingTime / this.state.intermissionDuration) * 100)
+            } else {
+                roundProgress = Math.ceil((remainingTime / this.state.roundDuration) * 100)
+            }
             this.setState({
-                countdownMessage: `Round ${round}/${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
+                countdownMessage: `Round ${round} of ${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
+                roundProgress: roundProgress,
             })
         }
     }
@@ -269,8 +282,8 @@ class PlayGame extends Component<Props, State> {
             <Leaderboard leaderboard={this.state.leaderboard} />
             {this.state.gameStarted && !this.state.gameEnded &&
             <>
-            <p className="description">Game started!!!</p>
             <p className="description">{this.state.countdownMessage}</p>
+            <CircularProgress variant="static" value={this.state.roundProgress}/>
             </>}
             
             {this.getContent()}
