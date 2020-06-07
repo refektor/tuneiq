@@ -4,7 +4,7 @@
  * we will route to the home screen.
  */
 
-import { Component } from "react";
+import React, { Component } from "react";
 import { CircularProgress } from '@material-ui/core';
 import Router from 'next/router';
 import UserLogin from '../components/user_login'
