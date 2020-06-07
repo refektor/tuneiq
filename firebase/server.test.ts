@@ -356,7 +356,7 @@ describe("joinGame", () => {
     });
 });
 
-describe("attempToJoinGame", () => {
+describe("attemptToJoinGame", () => {
     it("successfully attempts to join game with exisiting game code", () => {
         const playerId = "123Dave";
         const playerName = "dave";
