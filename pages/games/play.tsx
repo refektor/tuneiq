@@ -5,8 +5,8 @@ import { Fragment, Component } from "react";
 import ReactPlayer from 'react-player'
 import { Button, Drawer } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import {getFirebaseApp} from '../../firebase/firebase';
-import * as server from '../../firebase/server';
+import { getFirebaseApp } from '../../firebase/firebase';
+import server from '../../firebase/server';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
 import AnswerList from '../../components/answers';
@@ -16,9 +16,9 @@ import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 const FirebaseApp = getFirebaseApp();
 
 const useStyles = (theme: Theme) =>
-  createStyles({
-    
-  });
+    createStyles({
+
+    });
 
 enum EventType {
     START = "starts",
@@ -36,7 +36,7 @@ interface State {
     gameStarted: boolean;
     rounds?: any[];
     songUrl?: string;
-    numberOfRounds?: number; 
+    numberOfRounds?: number;
     isHost?: boolean;
     startTime?: number;
     currentRound?: number;
@@ -57,7 +57,7 @@ interface Props {
 class PlayGame extends Component<Props, State> {
     timingEvents: TimeEvent[];
 
-     constructor(props) {
+    constructor(props) {
         super(props);
         this.state = {
             playing: false,
@@ -75,11 +75,11 @@ class PlayGame extends Component<Props, State> {
             .onSnapshot((doc) => {
                 this.handleGameUpdate(doc.data());
             });
-     }
+    }
 
-     handleGameUpdate(gameObj): void {
+    handleGameUpdate(gameObj): void {
         const isHost: boolean = gameObj.hostId === FirebaseApp.auth().currentUser?.uid;
-        const leaderboard = Object.keys(gameObj.leaderBoard).map((id,index) => {
+        const leaderboard = Object.keys(gameObj.leaderBoard).map((id, index) => {
             return { 'name': gameObj.leaderBoard[id].name, 'score': gameObj.leaderBoard[id].score }
         });
         this.setState({
@@ -92,14 +92,14 @@ class PlayGame extends Component<Props, State> {
         if (!this.state.gameStarted && gameObj.startTime) {
             this.startGame(gameObj.startTime);
         }
-     }
+    }
 
-     startGameClicked() {
-         server.startGame(this.props.gameId);
-     }
+    startGameClicked() {
+        server.startGame(this.props.gameId);
+    }
 
-     startGame(startTime: number) {
-        const {roundDuration, intermissionDuration, numberOfRounds} = this.state;
+    startGame(startTime: number) {
+        const { roundDuration, intermissionDuration, numberOfRounds } = this.state;
         const timingEvents: TimeEvent[] = [];
 
         let future = startTime;
@@ -107,14 +107,14 @@ class PlayGame extends Component<Props, State> {
             future += (i === 0) ? 0 : intermissionDuration;
             timingEvents.push({
                 time: future,
-                round: i+1,
+                round: i + 1,
                 event: EventType.START
             });
 
             future += roundDuration;
             timingEvents.push({
                 time: future,
-                round: i+1,
+                round: i + 1,
                 event: EventType.END
             });
         }
@@ -130,7 +130,7 @@ class PlayGame extends Component<Props, State> {
             if (!timingEvents.length) {
                 return;
             }
-            const {time, round, event} = timingEvents[0];
+            const { time, round, event } = timingEvents[0];
             const now = new Date().getTime();
             const remainingTime = time - now;
             if (remainingTime < 0) {
@@ -138,11 +138,11 @@ class PlayGame extends Component<Props, State> {
                 if (timingEvents.length === 0) {
                     // end game!
                     clearInterval(interval);
-                    this.setState({gameEnded: true})
+                    this.setState({ gameEnded: true })
                     return;
                 }
                 // change display (start/end round)
-                const {event, round} = timingEvents[0];
+                const { event, round } = timingEvents[0];
                 if (event === EventType.START) {
                     // intermission
                     this.setState({
@@ -153,7 +153,7 @@ class PlayGame extends Component<Props, State> {
                     // round
                     this.setState({
                         currentRound: round,
-                        songUrl: this.state.rounds[round-1]?.url,
+                        songUrl: this.state.rounds[round - 1]?.url,
                         playing: true,
                     })
 
@@ -164,81 +164,81 @@ class PlayGame extends Component<Props, State> {
                 })
             }
         }, 100);
-     }
+    }
 
-     getRoundAnswers() {
+    getRoundAnswers() {
         const roundIdx = this.state.currentRound - 1;
-        
-        return this.state.rounds[roundIdx].tracks.map((track) => {
-            return {id: track.id, displayText: track.title, isCorrect: track.isAnswer};
-        });
-     }
 
-     correctAnswerSubmitted() {
-        const {time} = this.timingEvents[0];
+        return this.state.rounds[roundIdx].tracks.map((track) => {
+            return { id: track.id, displayText: track.title, isCorrect: track.isAnswer };
+        });
+    }
+
+    correctAnswerSubmitted() {
+        const { time } = this.timingEvents[0];
         const now = new Date().getTime();
         const remainingTime = time - now;
         const roundDuration = this.state.roundDuration;
         const pctRoundRemaining = remainingTime / roundDuration;
 
         server.increasePlayerScore(this.props.gameId, FirebaseApp.auth().currentUser.uid, pctRoundRemaining);
-     }
+    }
 
-     getContent() {
+    getContent() {
         if (this.state.gameEnded) {
             return (
                 <>
-                <p className="description">Game Over</p>
+                    <p className="description">Game Over</p>
                 </>
             );
         } else if (this.state.gameStarted) {
             return (
                 <>
-                {
-                this.state.songUrl && 
-                <>
-                <img src="/music-gif.gif"/>
-                <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
-                <p className="description">What is the name of this tune?</p>
-                <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
-                </>
-                }
+                    {
+                        this.state.songUrl &&
+                        <>
+                            <img src="/music-gif.gif" />
+                            <ReactPlayer height={0} url={this.state.songUrl} playing={this.state.playing} />
+                            <p className="description">What is the name of this tune?</p>
+                            <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)} />
+                        </>
+                    }
                 </>
             )
         } else { // waiting for game to start
             return (
                 <>
-                <p className="description">Waiting for game to start</p>
-                {(this.state.isHost) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
+                    <p className="description">Waiting for game to start</p>
+                    {(this.state.isHost) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
                 </>
             );
         }
-     }
-
-     render() {
-        const { classes } = this.props;
-         return (
-            <PageWrapper>
-            <Auth attemptSignIn={true}>
-            <Leaderboard leaderboard={this.state.leaderboard} />
-            {this.state.gameStarted && !this.state.gameEnded &&
-            <>
-            <p className="description">Game started!!!</p>
-            <p className="description">{this.state.countdownMessage}</p>
-            </>}
-            
-            {this.getContent()}
-
-            </Auth>
-            </PageWrapper>
-         )
-     }
- }
-
- export default withStyles(useStyles)(PlayGame);
-
- export async function getServerSideProps(context) {
-    return {
-      props: {gameId: context.query.gameId}, // will be passed to the page component as props
     }
-  }
+
+    render() {
+        const { classes } = this.props;
+        return (
+            <PageWrapper>
+                <Auth attemptSignIn={true}>
+                    <Leaderboard leaderboard={this.state.leaderboard} />
+                    {this.state.gameStarted && !this.state.gameEnded &&
+                        <>
+                            <p className="description">Game started!!!</p>
+                            <p className="description">{this.state.countdownMessage}</p>
+                        </>}
+
+                    {this.getContent()}
+
+                </Auth>
+            </PageWrapper>
+        )
+    }
+}
+
+export default withStyles(useStyles)(PlayGame);
+
+export async function getServerSideProps(context) {
+    return {
+        props: { gameId: context.query.gameId }, // will be passed to the page component as props
+    }
+}
