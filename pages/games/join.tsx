@@ -6,85 +6,63 @@ import PageWrapper from '../../components/page_wrapper';
 import LoadingWrapper from '../../components/loading_wrapper';
 import Auth from '../../components/auth'
 import inputStyles from '../../styles/styles';
-import * as server from '../../firebase/server';
+import server from '../../firebase/server';
 import { getFirebaseApp } from '../../firebase/firebase';
 
 export default function JoinGame() {
-    const classes = inputStyles();
-    const router = useRouter();
-    const [nameLabel, setNameLabel] = useState("Name")
-    const [nameError, setNameError] = useState(false);
-    const [passError, setPassError] = useState(false);
-    const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [loading, setLoading] = useState(false);
+  const classes = inputStyles();
+  const router = useRouter();
+  const [gameCodeError, setGameCodeError] = useState(false);
+  const [gameCode, setGameCode] = useState("");
 
-    function handleNameChange(e) {
-        setName(e.target.value);
-        setNameError(false);
-    }
 
-    function joinGame() {
-        // send request to join game, and get back game ID
-        setLoading(true);
-        const user = getFirebaseApp().auth().currentUser;
-        server.attemptToJoinGame(name, password, user.uid, user.displayName).then((gameId) => {
-            router.push({
-                pathname: "/games/play",
-                query: {
-                    gameId: gameId
-                }
-            })
-        }).catch((err) => {
-            if (err.field === "gameName") {
-                setNameError(true)
-            } else {
-                setPassError(true);
-            }
-        });
+  function joinGame() {
+    // send request to join game, and get back game ID
+    // ...
+    const user = getFirebaseApp().auth().currentUser;
+    server.attemptToJoinGame(gameCode, user.uid, user.displayName).then((gameId) => {
+      router.push({
+        pathname: "/games/play",
+        query: {
+          gameId: gameId
+        }
+      })
+    }).catch((err) => {
+      if (err.field === "gameCode") {
+        setGameCodeError(true)
+      }
+    });
 
-    }
+  }
 
-    function handlePasswordChange(e) {
-        setPassword(e.target.value);
-        setPassError(false);
-    }
+  function handleGameCodeChange(e) {
+    setGameCode(e.target.value);
+    setGameCodeError(false);
+  }
 
-    return (
+  return (
+    <Auth>
       <PageWrapper>
-        <Auth>
-            <LoadingWrapper loading={loading}>
-                <TextField 
-                id="standard-name" 
-                label={nameLabel} 
-                value={name} 
-                autoComplete="off" 
-                error={nameError} 
-                className={classes.inputChild}
-                onChange={handleNameChange} 
-                />
-                <TextField 
-                id="standard-password-input" 
-                label="Password" 
-                type="password" 
-                autoComplete="off"
-                className={classes.inputChild} 
-                value={password} 
-                error={passError} 
-                onChange={handlePasswordChange} 
-                />
-                <Fab
-                variant="extended"
-                color="primary"
-                size="large"
-                className={classes.button}
-                onClick={joinGame}
-                >
-                <PlayArrowIcon />
-                JOIN
-                </Fab>
-            </LoadingWrapper>
-        </Auth>
-    </PageWrapper>
-    );
+        <TextField
+          id="standard-password-input"
+          label="GameCode"
+          autoComplete="off"
+          className={classes.inputChild}
+          value={gameCode}
+          error={gameCodeError}
+          onChange={handleGameCodeChange}
+        />
+        <Fab
+          variant="extended"
+          color="primary"
+          size="large"
+          className={classes.button}
+          onClick={joinGame}
+        >
+          <PlayArrowIcon />
+            JOIN
+          </Fab>
+      </PageWrapper>
+    </Auth>
+  );
 }

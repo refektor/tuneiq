@@ -12,7 +12,7 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
     return doesGameNameExist(gameName).then((_) => {
         console.log('game name does not exist, creating new game')
         const gameCode = generateGameCode();
-        if(!gameName){
+        if (!gameName) {
             gameName = `${hostName}'s Game`;    // Set gameName if not passed
         }
         const ganerateGameContentEndPoint = "https://us-central1-tuneiq.cloudfunctions.net/generateGameContent"
@@ -47,7 +47,7 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
     });
 }
 
-function generateGameCode(){
+function generateGameCode() {
     const message = (Math.random() * Date.now()).toString()    // Message computed from pseudo-random number and Epoch time
     var hexSHA256Digest = new Hashes.SHA256().hex(message);    // Run message through SHA256 hash function
 
@@ -95,20 +95,18 @@ function getPossibleGenres() {
         });
 }
 
-function attemptToJoinGame(gameName: string, gameCode: string, playerId: string, playerName: string) {
+function attemptToJoinGame(gameCode: string, playerId: string, playerName: string) {
     return getFirebaseApp().firestore().collection("games")
-        .where("name", "==", gameName)
+        .where("gameCode", "==", gameCode)
         .get().then((games) => {
-            console.log(games)
-            const gameId = games.docs[0].id;
-            console.log(games.docs[0].data());
-            if (gameCode === games.docs[0].data().gameCode) {
-                return joinGame(gameId, playerId, playerName);
+            if (!games.empty) {
+                console.log(games)
+                const gameId = games.docs[0].id;
+                return exportFunctions.joinGame(gameId, playerId, playerName);
             } else {
-                return Promise.reject({ field: "gameCode", message: "Invalid game code." });
+                return Promise.reject({ fieldName: "gameCode", message: `Game code: ${gameCode} does not exist` })
             }
-
-        }).catch((err) => (Promise.reject({ field: "gameName", message: "Game does not exist." })));
+        }).catch((error) => (error));
 }
 
 
@@ -121,7 +119,7 @@ function joinGame(gameId: string, playerId: string, playerName: string) {
             }
             const gameData = gameDoc.data();
             const leaderBoard = gameData.leaderBoard;
-            if (gameData.startTime != null){
+            if (gameData.startTime != null) {
                 return Promise.reject(`Game ${gameId} has already started`);
             }
             else if (Object.keys(leaderBoard).length >= MAX_PLAYERS_PER_GAME) {
@@ -190,13 +188,13 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
             if (Object.keys(leaderBoard).length > 1) {
                 var newLeaderBoard = {}
                 Object.keys(leaderBoard).forEach(playerId => {
-                    if(playerId != userId){
+                    if (playerId != userId) {
                         newLeaderBoard[playerId] = leaderBoard[playerId];
                     }
                 });
                 transaction.update(gameDocRef, { 'leaderBoard': newLeaderBoard });
                 const usersLeft = Object.keys(newLeaderBoard);
-                if(gameData.hostId === userId){
+                if (gameData.hostId === userId) {
                     const newHostId = usersLeft[usersLeft.length * Math.random() << 0];
                     transaction.update(gameDocRef, { 'hostId': newHostId })
                 }
@@ -269,7 +267,7 @@ function getGameIdByGameCode(gameCode: string): Promise<string> {
             }
             else if (games.size > 1) {
                 return Promise.reject(`Game code ${gameCode} is not unique.`)
-            } 
+            }
             else {
                 return games.docs[0].id;
             }
@@ -281,7 +279,8 @@ function getGameIdByGameCode(gameCode: string): Promise<string> {
         })
 }
 
-export {
+
+const exportFunctions = {
     doesGameNameExist,
     getPossibleGenres,
     createGame,
@@ -296,3 +295,5 @@ export {
     getGameIdByGameCode,
     generateGameCode
 };
+
+export default exportFunctions;
