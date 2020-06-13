@@ -17,7 +17,6 @@ export default function AnswerList(props) {
     const classes = useStyles();
     const [answerSubmitted, setAnswerSubmitted] = useState(false);
     const [correctAnswerSubmitted, setCorrectAnswerSubmitted] = useState(false);
-    const [severity, setSeverity] = useState("");
 
     const handleClose = (event: React.SyntheticEvent | React.MouseEvent, reason?: string) => {
         if (reason === 'clickaway') {
@@ -29,10 +28,7 @@ export default function AnswerList(props) {
         setAnswerSubmitted(true);
         if (isCorrect) {
             setCorrectAnswerSubmitted(true);
-            setSeverity("success");
             props.onCorrectAnswer();
-        } else {
-            setSeverity("error");
         }
     }
 
@@ -41,7 +37,7 @@ export default function AnswerList(props) {
         if (correctAnswerSubmitted) {
             return (
                 <>
-                    <strong>{"Correct!"}</strong>
+                    <strong>{"Correct! "}</strong>
                     {"This song is called"}
                     <strong> {correctAnswer.answerText}</strong>
                 </>
@@ -49,7 +45,7 @@ export default function AnswerList(props) {
         } else {
             return (
                 <>
-                    <strong>{"Nope!"}</strong>
+                    <strong>{"Nope! "}</strong>
                     {"This song is called"}
                     <strong> {correctAnswer.answerText}</strong>
                 </>

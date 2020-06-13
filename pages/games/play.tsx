@@ -155,9 +155,9 @@ class PlayGame extends Component<Props, State> {
             let roundProgress = 100;
             if (event === EventType.START) {
                 // intermission
-                roundProgress = Math.ceil((remainingTime / this.state.intermissionDuration) * 100)
+                roundProgress = Math.ceil((remainingTime / this.state.intermissionDuration) * 100);
             } else {
-                roundProgress = Math.ceil((remainingTime / this.state.roundDuration) * 100)
+                roundProgress = Math.ceil((remainingTime / this.state.roundDuration) * 100);
             }
             this.setState({
                 countdownMessage: `Round ${round} of ${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
@@ -254,13 +254,13 @@ class PlayGame extends Component<Props, State> {
             return (
                 <>
                 {
-                this.state.songUrl && 
-                <>
-                <img src="/music-gif.gif"/>
-                <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
-                <p className="description">What is the name of this tune?</p>
-                <AnswerList answers={this.state.roundAnswers} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
-                </>
+                    this.state.songUrl && 
+                    <>
+                        <img src="/pink-equalizer.gif" height="200" width="400" />
+                        <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
+                        <p className="description">What is the name of this tune?</p>
+                        <AnswerList answers={this.state.roundAnswers} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
+                    </>
                 }
                 </>
             )
