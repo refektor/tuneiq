@@ -7,6 +7,7 @@ import * as hash from 'password-hash';
 import { getFirebaseApp } from '../../firebase/firebase';
 import server from '../../firebase/server';
 import PageWrapper from '../../components/page_wrapper';
+import LoadingWrapper from '../../components/loading_wrapper';
 import Auth from '../../components/auth';
 import HeadsetIcon from '@material-ui/icons/Headset';
 import inputStyles from '../../styles/styles';

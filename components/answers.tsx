@@ -18,7 +18,7 @@ export default function AnswerList(props) {
     function getAnswerText() {
         const correctAnswer = props.answers.find((answer) => (answer.isCorrect));
         if (correctAnswerSubmitted) {
-            return `You're right! This song is called ${correctAnswer.displayText}`;
+            return `You're right! This song is called ${correctAnswer.answerText}`;
         } else {
             return `You're wrong! This This song is called ${correctAnswer.displayText}`;
         }

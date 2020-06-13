@@ -1,11 +1,11 @@
 /**
  * Page repsonsible for hosting the game content.
  */
-import { Fragment, Component } from "react";
+import { Component } from "react";
 import ReactPlayer from 'react-player'
-import { Button, Drawer } from '@material-ui/core';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import { getFirebaseApp } from '../../firebase/firebase';
+import { Button } from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import {getFirebaseApp} from '../../firebase/firebase';
 import server from '../../firebase/server';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
@@ -17,7 +17,9 @@ const FirebaseApp = getFirebaseApp();
 
 const useStyles = (theme: Theme) =>
     createStyles({
-
+            emphasisText: {
+                color: theme.palette.primary.main,
+            }
     });
 
 enum EventType {
@@ -46,7 +48,8 @@ interface State {
     roundInSession?: boolean;
     gameEnded?: boolean;
     leaderboard?: any;
-
+    roundAnswers?: any[];
+    roundProgress?: number;
 };
 
 interface Props {
@@ -56,6 +59,8 @@ interface Props {
 
 class PlayGame extends Component<Props, State> {
     timingEvents: TimeEvent[];
+    timerInterval: number;
+    intervalTimeoutId: NodeJS.Timeout;
 
     constructor(props) {
         super(props);
@@ -68,8 +73,11 @@ class PlayGame extends Component<Props, State> {
             roundDuration: 10000,
             roundInSession: false,
             gameEnded: false,
-            leaderboard: []
+            leaderboard: [],
+            roundAnswers: [],
         };
+
+        this.timerInterval = 100;
 
         FirebaseApp.firestore().collection("games").doc(this.props.gameId)
             .onSnapshot((doc) => {
@@ -94,14 +102,81 @@ class PlayGame extends Component<Props, State> {
         }
     }
 
-    startGameClicked() {
-        server.startGame(this.props.gameId);
+     startGameClicked() {
+         server.startGame(this.props.gameId);
+     }
+     
+     /**
+      * Event handler for the main interval timer timeout. Responsible
+      * for updating the countdown timer and any game content transitions
+      * (i.e. round -> intermission).
+      */
+     updateGameEventHandler() {
+        if (!this.timingEvents.length) {
+            return;
+        }
+        const {time, round, event} = this.timingEvents[0];
+        const now = new Date().getTime();
+        const remainingTime = time - now;
+
+        if (remainingTime < 0) {
+            this.timingEvents.shift();
+            if (this.timingEvents.length === 0) {
+                // end game!
+                clearInterval(this.intervalTimeoutId);
+                this.setState({gameEnded: true})
+                return;
+            }
+            // change display (start/end round)
+            const {event, round} = this.timingEvents[0];
+            if (event === EventType.START) {
+                // intermission
+                this.setState({
+                    songUrl: "",
+                    playing: false,
+                    roundProgress: 100,
+                })
+            } else {
+                // round
+                this.setState({
+                    currentRound: round,
+                    songUrl: this.state.rounds[round-1]?.url,
+                    playing: true,
+                    roundAnswers: this.getRoundAnswers(round-1),
+                    roundProgress: 100,
+                })
+            }
+
+            if (remainingTime < this.timerInterval) {
+                clearInterval(this.intervalTimeoutId);
+                setInterval(this.updateGameEventHandler.bind(this))
+            }
+        } else {
+            let roundProgress = 100;
+            if (event === EventType.START) {
+                // intermission
+                roundProgress = Math.ceil((remainingTime / this.state.intermissionDuration) * 100)
+            } else {
+                roundProgress = Math.ceil((remainingTime / this.state.roundDuration) * 100)
+            }
+            this.setState({
+                countdownMessage: `Round ${round} of ${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
+                roundProgress: roundProgress,
+            })
+        }
     }
 
-    startGame(startTime: number) {
-        const { roundDuration, intermissionDuration, numberOfRounds } = this.state;
-        const timingEvents: TimeEvent[] = [];
+    /**
+     * Creates all of the game events and times based on the provided
+     * start time and round/intermission durations. Starts the main game
+     * interval timer for all game events.
+     * @param startTime UTC time (milliseconds since unix epoch)
+     */
+     startGame(startTime: number) {
+        const {roundDuration, intermissionDuration, numberOfRounds} = this.state;
 
+        // Set up timing events for the start and end of each round
+        const timingEvents: TimeEvent[] = [];
         let future = startTime;
         for (let i = 0; i < numberOfRounds; ++i) {
             future += (i === 0) ? 0 : intermissionDuration;
@@ -126,51 +201,28 @@ class PlayGame extends Component<Props, State> {
             currentRound: 1,
         })
 
-        const interval = setInterval(() => {
-            if (!timingEvents.length) {
-                return;
-            }
-            const { time, round, event } = timingEvents[0];
-            const now = new Date().getTime();
-            const remainingTime = time - now;
-            if (remainingTime < 0) {
-                timingEvents.shift();
-                if (timingEvents.length === 0) {
-                    // end game!
-                    clearInterval(interval);
-                    this.setState({ gameEnded: true })
-                    return;
-                }
-                // change display (start/end round)
-                const { event, round } = timingEvents[0];
-                if (event === EventType.START) {
-                    // intermission
-                    this.setState({
-                        songUrl: "",
-                        playing: false,
-                    })
-                } else {
-                    // round
-                    this.setState({
-                        currentRound: round,
-                        songUrl: this.state.rounds[round - 1]?.url,
-                        playing: true,
-                    })
+        this.intervalTimeoutId = setInterval(this.updateGameEventHandler.bind(this), this.timerInterval);
+     }
 
-                }
-            } else {
-                this.setState({
-                    countdownMessage: `Round ${round}/${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
-                })
-            }
-        }, 100);
+    // Fisher-Yates Shuffle
+    shuffleAnswers(answers) {
+        for (let i = answers.length - 1; i > 0; --i) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [answers[i], answers[j]] = [answers[j], answers[i]];
+        }
+
+        return answers;
     }
 
-    getRoundAnswers() {
-        const roundIdx = this.state.currentRound - 1;
-
-        return this.state.rounds[roundIdx].tracks.map((track) => {
-            return { id: track.id, displayText: track.title, isCorrect: track.isAnswer };
+     /**
+      * Creates answer objects to be baswer to AnswerList component
+      * based on the answers for the given round index.
+      * @param roundIndex index of current round (0-based)
+      */
+     getRoundAnswers(roundIdx) {
+        return this.shuffleAnswers(this.state.rounds[roundIdx].tracks).map((track) => {
+            const answerText = `${track.title} - ${track.artists.join(", ")}`;
+            return {id: track.id, displayText: track.title, isCorrect: track.isAnswer, answerText};
         });
     }
 
@@ -178,6 +230,13 @@ class PlayGame extends Component<Props, State> {
         const { time } = this.timingEvents[0];
         const now = new Date().getTime();
         const remainingTime = time - now;
+
+        // We check if the remaining time in the round is negative because
+        // there is a chance that we receive this signal after the round has completed.
+        if (remainingTime < 0) {
+            return;
+        }
+        
         const roundDuration = this.state.roundDuration;
         const pctRoundRemaining = remainingTime / roundDuration;
 
@@ -194,15 +253,15 @@ class PlayGame extends Component<Props, State> {
         } else if (this.state.gameStarted) {
             return (
                 <>
-                    {
-                        this.state.songUrl &&
-                        <>
-                            <img src="/music-gif.gif" />
-                            <ReactPlayer height={0} url={this.state.songUrl} playing={this.state.playing} />
-                            <p className="description">What is the name of this tune?</p>
-                            <AnswerList answers={this.getRoundAnswers()} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)} />
-                        </>
-                    }
+                {
+                this.state.songUrl && 
+                <>
+                <img src="/music-gif.gif"/>
+                <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
+                <p className="description">What is the name of this tune?</p>
+                <AnswerList answers={this.state.roundAnswers} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
+                </>
+                }
                 </>
             )
         } else { // waiting for game to start
@@ -219,17 +278,17 @@ class PlayGame extends Component<Props, State> {
         const { classes } = this.props;
         return (
             <PageWrapper>
-                <Auth attemptSignIn={true}>
-                    <Leaderboard leaderboard={this.state.leaderboard} />
-                    {this.state.gameStarted && !this.state.gameEnded &&
-                        <>
-                            <p className="description">Game started!!!</p>
-                            <p className="description">{this.state.countdownMessage}</p>
-                        </>}
+            <Auth attemptSignIn={true}>
+            <Leaderboard leaderboard={this.state.leaderboard} />
+            {this.state.gameStarted && !this.state.gameEnded &&
+            <>
+            <p className="description">{this.state.countdownMessage}</p>
+            <CircularProgress variant="static" value={this.state.roundProgress}/>
+            </>}
+            
+            {this.getContent()}
 
-                    {this.getContent()}
-
-                </Auth>
+            </Auth>
             </PageWrapper>
         )
     }

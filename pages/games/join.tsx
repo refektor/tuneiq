@@ -3,7 +3,8 @@ import { TextField, Fab } from '@material-ui/core';
 import { useRouter } from 'next/router';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PageWrapper from '../../components/page_wrapper';
-import Auth from '../../components/auth';
+import LoadingWrapper from '../../components/loading_wrapper';
+import Auth from '../../components/auth'
 import inputStyles from '../../styles/styles';
 import server from '../../firebase/server';
 import { getFirebaseApp } from '../../firebase/firebase';

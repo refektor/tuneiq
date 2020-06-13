@@ -34,8 +34,8 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
                 .add(gameDetails.data)
                 .then((docRef) => {
                     console.log(docRef)
-                    console.log("succesfully created game with id: ", docRef.id);
-                    return docRef.id
+                    console.log("successfully created game with id: ", docRef.id);
+                    return docRef.id;
                 })
                 .catch((error) => {
                     console.log(error);
@@ -84,7 +84,7 @@ function doesGameNameExist(name) {
 
 function getPossibleGenres() {
     // TODO: replace with call to spotify api, endpoint: https://api.spotify.com/v1/recommendations/available-genre-seeds
-    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno"] //change at will
+    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno", "deep-house"] //change at will
     return availableGenres['genres']
         .map((genre) => {
             return {
