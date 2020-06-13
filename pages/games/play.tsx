@@ -278,17 +278,18 @@ class PlayGame extends Component<Props, State> {
         const { classes } = this.props;
         return (
             <PageWrapper>
-            <Auth attemptSignIn={true}>
-            <Leaderboard leaderboard={this.state.leaderboard} />
-            {this.state.gameStarted && !this.state.gameEnded &&
-            <>
-            <p className="description">{this.state.countdownMessage}</p>
-            <CircularProgress variant="static" value={this.state.roundProgress}/>
-            </>}
-            
-            {this.getContent()}
+                <Auth attemptSignIn={true}>
+                    <Leaderboard leaderboard={this.state.leaderboard} />
+                    {this.state.gameStarted && !this.state.gameEnded &&
+                        <>
+                            <p className="description">{this.state.countdownMessage}</p>
+                            <CircularProgress variant="static" value={this.state.roundProgress}/>
+                        </>
+                    }
+                    
+                    {this.getContent()}
 
-            </Auth>
+                </Auth>
             </PageWrapper>
         )
     }
