@@ -3,23 +3,23 @@
  */
 import { Component } from "react";
 import ReactPlayer from 'react-player'
-import { Button } from '@material-ui/core';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { Button, CircularProgress } from '@material-ui/core';
 import {getFirebaseApp} from '../../firebase/firebase';
 import server from '../../firebase/server';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
 import AnswerList from '../../components/answers';
 import Leaderboard from '../../components/leaderboard';
+import ExitGameComponent from '../../components/exit_game';
 import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 
 const FirebaseApp = getFirebaseApp();
 
 const useStyles = (theme: Theme) =>
     createStyles({
-            emphasisText: {
-                color: theme.palette.primary.main,
-            }
+        emphasisText: {
+            color: theme.palette.primary.main,
+        }
     });
 
 enum EventType {
@@ -86,6 +86,8 @@ class PlayGame extends Component<Props, State> {
     }
 
     handleGameUpdate(gameObj): void {
+        if (!gameObj) return; //if not gameObj, it was deleted so don't do anything here
+
         const isHost: boolean = gameObj.hostId === FirebaseApp.auth().currentUser?.uid;
         const leaderboard = Object.keys(gameObj.leaderBoard).map((id, index) => {
             return { 'name': gameObj.leaderBoard[id].name, 'score': gameObj.leaderBoard[id].score }
@@ -279,6 +281,7 @@ class PlayGame extends Component<Props, State> {
         return (
             <PageWrapper>
                 <Auth attemptSignIn={true}>
+                    <ExitGameComponent gameId={this.props.gameId} />
                     <Leaderboard leaderboard={this.state.leaderboard} />
                     {this.state.gameStarted && !this.state.gameEnded &&
                         <>

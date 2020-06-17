@@ -180,11 +180,13 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
             if (!gameDoc.exists) {
                 return Promise.reject(`Game Id ${gameId} is invalid`)
             }
+
             const gameData = gameDoc.data();
             const leaderBoard = gameData.leaderBoard;
             if (!gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
                 return Promise.reject(`Player ${userId} is not in game ${gameId}.`);
             }
+
             if (Object.keys(leaderBoard).length > 1) {
                 var newLeaderBoard = {}
                 Object.keys(leaderBoard).forEach(playerId => {
@@ -198,10 +200,13 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
                     const newHostId = usersLeft[usersLeft.length * Math.random() << 0];
                     transaction.update(gameDocRef, { 'hostId': newHostId })
                 }
+
+                //TODO: do we need to return a resolved promise here?
                 return `Player ${userId} left game ${gameId}.`;
             }
             else {
                 deleteGame(gameId);
+                //TODO: do we need to return a resolved promise here?
                 return `Player ${userId} left game ${gameId}, ending the game.`
             }
         })
