@@ -2,8 +2,9 @@
  * Page repsonsible for hosting the game content.
  */
 import { Component } from "react";
-import ReactPlayer from 'react-player'
-import { Button, CircularProgress } from '@material-ui/core';
+import ReactPlayer from 'react-player';
+import { withRouter, Router } from 'next/router';
+import { Button, Fab, CircularProgress, Typography } from '@material-ui/core';
 import {getFirebaseApp} from '../../firebase/firebase';
 import server from '../../firebase/server';
 import Auth from '../../components/auth';
@@ -19,6 +20,12 @@ const useStyles = (theme: Theme) =>
     createStyles({
         emphasisText: {
             color: theme.palette.primary.main,
+            fontWeight: 600,
+        },
+
+        text: {
+            textAlign: "center",
+            margin: theme.spacing(0, 0, 10),
         }
     });
 
@@ -47,6 +54,7 @@ interface State {
     roundDuration?: number;
     roundInSession?: boolean;
     gameEnded?: boolean;
+    gameCode: string,
     leaderboard?: any;
     roundAnswers?: any[];
     roundProgress?: number;
@@ -55,6 +63,7 @@ interface State {
 interface Props {
     gameId: string;
     classes: any;
+    router: Router;
 }
 
 class PlayGame extends Component<Props, State> {
@@ -73,11 +82,16 @@ class PlayGame extends Component<Props, State> {
             roundDuration: 10000,
             roundInSession: false,
             gameEnded: false,
+            gameCode: "",
             leaderboard: [],
             roundAnswers: [],
         };
 
         this.timerInterval = 100;
+
+        server.getGameCodeByGameId(this.props.gameId).then((gameCode) => {
+            this.setState({ gameCode });
+        })
 
         FirebaseApp.firestore().collection("games").doc(this.props.gameId)
             .onSnapshot((doc) => {
@@ -245,11 +259,42 @@ class PlayGame extends Component<Props, State> {
         server.increasePlayerScore(this.props.gameId, FirebaseApp.auth().currentUser.uid, pctRoundRemaining);
     }
 
+    exitGame() {
+        this.props.router.push({
+            pathname: "/",
+        });
+    }
+
     getContent() {
+        const { classes } = this.props;
+
         if (this.state.gameEnded) {
             return (
                 <>
-                    <p className="description">Game Over</p>
+                    <p className="description">Game Over!</p>
+                    <Typography variant="h6" className={classes.text}>
+                        Congrats {" "}
+                        <span className={classes.emphasisText}>
+                            {this.state.leaderboard[0].name}
+                        </span> 
+                        {" "} on having the highest score with
+                        {" "}
+                        <span className={classes.emphasisText}>
+                            {this.state.leaderboard[0].score}
+                        </span>
+                        {" "} points!
+                        <br />
+                        Thanks for playing - see you next time!
+                    </Typography>
+                    <Fab
+                        variant="extended"
+                        color="primary"
+                        size="large"
+                        className={classes.button}
+                        onClick={this.exitGame.bind(this)}
+                    >
+                        MAIN MENU
+                    </Fab>
                 </>
             );
         } else if (this.state.gameStarted) {
@@ -270,7 +315,23 @@ class PlayGame extends Component<Props, State> {
             return (
                 <>
                     <p className="description">Waiting for game to start</p>
-                    {(this.state.isHost) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
+                    <Typography variant="h6" className={classes.text}>
+                        Share this code with your friends to join the game
+                        <br />
+                        <span className={classes.emphasisText}>
+                            {this.state.gameCode}
+                        </span>
+                    </Typography>
+                    {this.state.isHost && 
+                        <Fab
+                        variant="extended"
+                        color="primary"
+                        size="large"
+                        className={classes.button}
+                        onClick={this.startGameClicked.bind(this)}>
+                            START GAME
+                        </Fab>
+                    }
                 </>
             );
         }
@@ -291,14 +352,13 @@ class PlayGame extends Component<Props, State> {
                     }
                     
                     {this.getContent()}
-
                 </Auth>
             </PageWrapper>
         )
     }
 }
 
-export default withStyles(useStyles)(PlayGame);
+export default withRouter (withStyles(useStyles) (PlayGame));
 
 export async function getServerSideProps(context) {
     return {

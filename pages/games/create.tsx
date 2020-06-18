@@ -53,12 +53,12 @@ function CreateGame({ player }) {
   const handleCreateGame = () => {
     const userId = FirebaseApp.auth().currentUser?.uid;
     const userName = FirebaseApp.auth().currentUser?.displayName;
-    console.log("Creating new game with params:", name, genre, userId, userName);
-    server.createGame(name, genre, userName, userId).then((docId) => {
+
+    server.createGame(name, genre, userName, userId).then((gameId) => {
       router.push({
         pathname: "/games/play",
         query: {
-          gameId: docId
+          gameId: gameId
         }
       });
     });
@@ -104,8 +104,8 @@ function CreateGame({ player }) {
             onClick={handleCreateGame}
           >
             <PlayArrowIcon />
-                PLAY
-              </Fab>
+            PLAY
+          </Fab>
         </Container>
       </PageWrapper>
     </Auth>

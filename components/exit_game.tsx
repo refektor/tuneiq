@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useRouter } from 'next/router'
-import { Fab, IconButton, Typography, Modal, Dialog, DialogTitle, makeStyles } from '@material-ui/core';
+import { useRouter } from 'next/router';
+import { Fab, IconButton, Dialog, DialogTitle, makeStyles } from '@material-ui/core';
 import ClearIcon from '@material-ui/icons/Clear';
 import inputStyles from '../styles/styles';
 import server from '../firebase/server';

@@ -33,8 +33,7 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
             return getFirebaseApp().firestore().collection("games")
                 .add(gameDetails.data)
                 .then((docRef) => {
-                    console.log(docRef)
-                    console.log("successfully created game with id: ", docRef.id);
+                    console.log(`successfully created game with id: ${docRef.id} and code: ${gameCode}`);
                     return docRef.id;
                 })
                 .catch((error) => {
@@ -256,6 +255,7 @@ function isUserInGame(gameId: string, userId: string): Promise<boolean> {
             if (gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
                 return true
             }
+
             return false
         }).catch(error => {
             return Promise.reject(error)
@@ -266,7 +266,7 @@ function getGameIdByGameCode(gameCode: string): Promise<string> {
     return getFirebaseApp().firestore().collection("games")
         .where("gameCode", "==", gameCode)
         .get()
-        .then(games => {
+        .then((games) => {
             if (games.empty) {
                 return Promise.reject(`Game code ${gameCode} is invalid.`)
             }
@@ -284,6 +284,22 @@ function getGameIdByGameCode(gameCode: string): Promise<string> {
         })
 }
 
+async function getGameCodeByGameId(gameId: string): Promise<string> {
+    return getFirebaseApp().firestore().collection("games")
+        .doc(gameId)
+        .get()
+        .then((gameDoc) => {
+            if (!gameDoc.exists) {
+                return Promise.reject(`Game Id: ${gameId} is invalid`);
+            } 
+            else if (gameDoc.data()) {
+                return gameDoc.data().gameCode;
+            }
+        }).catch((error) => {
+            return Promise.reject(error);
+        });
+}
+
 
 const exportFunctions = {
     doesGameNameExist,
@@ -298,6 +314,7 @@ const exportFunctions = {
     increasePlayerScore,
     isUserInGame,
     getGameIdByGameCode,
+    getGameCodeByGameId,
     generateGameCode
 };
 
