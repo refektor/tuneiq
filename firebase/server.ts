@@ -10,7 +10,7 @@ const GAME_CODE_LENGTH = 6;
 
 function createGame(gameName: string, gameGenre: string, hostName: string, hostId: string) {
     return doesGameNameExist(gameName).then((_) => {
-        console.log('game name does not exist, creating new game')
+        console.log('game name does not exist, creating new game');
         const gameCode = generateGameCode();
         if (!gameName) {
             gameName = `${hostName}'s Game`;    // Set gameName if not passed
@@ -30,6 +30,9 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
         };
 
         return axios.request(generateGameContentConfig).then(gameDetails => {
+            const expiryTime = new Date().getTime() + 7200000 ; // 2 hours
+            gameDetails.data['expiryTime'] = expiryTime; // TODO: is there a better way to do this?
+            console.log(gameDetails);
             return getFirebaseApp().firestore().collection("games")
                 .add(gameDetails.data)
                 .then((docRef) => {
@@ -83,7 +86,8 @@ function doesGameNameExist(name) {
 
 function getPossibleGenres() {
     // TODO: replace with call to spotify api, endpoint: https://api.spotify.com/v1/recommendations/available-genre-seeds
-    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno", "deep-house"] //change at will
+    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno", "deep-house", 
+                            "acoustic", "ambient", "brazil", "chill", "country", "dubstep", "edm", "happy"] //change at will
     return availableGenres['genres']
         .map((genre) => {
             return {
@@ -97,15 +101,21 @@ function getPossibleGenres() {
 function attemptToJoinGame(gameCode: string, playerId: string, playerName: string) {
     return getFirebaseApp().firestore().collection("games")
         .where("gameCode", "==", gameCode)
-        .get().then((games) => {
+        .get()
+        .then((games) => {
             if (!games.empty) {
-                console.log(games)
+                const timeNow = new Date().getTime();
+                if (timeNow > games.docs[0].data().expiryTime) {
+                    return { gameId: games.docs[0].id, error: `Unfortunately game ${gameCode} is over already :(` };
+                }
                 const gameId = games.docs[0].id;
-                return exportFunctions.joinGame(gameId, playerId, playerName);
+                return exportFunctions.joinGame(gameId, playerId, playerName); //TODO do we need exportFunctions here?
             } else {
                 return Promise.reject({ fieldName: "gameCode", message: `Game code: ${gameCode} does not exist` })
             }
-        }).catch((error) => (error));
+        }).catch((error) => {
+            error
+        });
 }
 
 
@@ -145,6 +155,14 @@ function startGame(gameId: string): void {
     getFirebaseApp().firestore().collection("games")
         .doc(gameId)
         .update({ startTime })
+    return;
+}
+
+function finishGame(gameId: string): void {
+    const expiryTime = new Date().getTime()
+    getFirebaseApp().firestore().collection("games")
+        .doc(gameId)
+        .update({ expiryTime })
     return;
 }
 
@@ -308,6 +326,7 @@ const exportFunctions = {
     attemptToJoinGame,
     joinGame,
     startGame,
+    finishGame,
     deleteGame,
     endGame,
     leaveGame,

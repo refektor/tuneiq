@@ -140,7 +140,8 @@ class PlayGame extends Component<Props, State> {
             if (this.timingEvents.length === 0) {
                 // end game!
                 clearInterval(this.intervalTimeoutId);
-                this.setState({gameEnded: true})
+                this.setState({gameEnded: true});
+                server.finishGame(this.props.gameId);
                 return;
             }
             // change display (start/end round)
@@ -277,7 +278,7 @@ class PlayGame extends Component<Props, State> {
                         <span className={classes.emphasisText}>
                             {this.state.leaderboard[0].name}
                         </span> 
-                        {" "} on having the highest score with
+                        {" "} on winning with
                         {" "}
                         <span className={classes.emphasisText}>
                             {this.state.leaderboard[0].score}

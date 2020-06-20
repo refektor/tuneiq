@@ -29,6 +29,7 @@ export default function ExitGameComponent({ gameId }) {
   const [showBackdrop, setShowBackdrop] = useState(false);
 
   const exitGame = () => {
+    server.finishGame(this.props.gameId);
     server.leaveGame(gameId, FirebaseApp.auth().currentUser.uid);
     router.push({
       pathname: "/",
