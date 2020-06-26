@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TextField, Fab } from '@material-ui/core';
+import { TextField, Fab, Typography } from '@material-ui/core';
 import { useRouter } from 'next/router';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PageWrapper from '../../components/page_wrapper';
@@ -13,6 +13,7 @@ export default function JoinGame() {
   const classes = inputStyles();
   const router = useRouter();
   const [gameCodeError, setGameCodeError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [gameCode, setGameCode] = useState("");
 
 
@@ -20,17 +21,22 @@ export default function JoinGame() {
     // send request to join game, and get back game ID
     // ...
     const user = getFirebaseApp().auth().currentUser;
-    server.attemptToJoinGame(gameCode, user.uid, user.displayName).then((gameId) => {
+    server.attemptToJoinGame(gameCode, user.uid, user.displayName).then((obj) => {
+      if (obj.error) {
+        setGameCodeError(true)
+        setErrorMessage(obj.error);
+        return;
+      }
+
       router.push({
         pathname: "/games/play",
         query: {
-          gameId: gameId
+          gameId: obj.gameId
         }
       })
     }).catch((err) => {
-      if (err.field === "gameCode") {
-        setGameCodeError(true)
-      }
+      setGameCodeError(true)
+      setErrorMessage(err);
     });
 
   }
@@ -43,9 +49,15 @@ export default function JoinGame() {
   return (
     <Auth>
       <PageWrapper>
+        {gameCodeError && (
+          <Typography variant="h6">
+            {errorMessage}
+          </Typography>
+        )
+        }
         <TextField
           id="standard-password-input"
-          label="GameCode"
+          label="Game Code"
           autoComplete="off"
           className={classes.inputChild}
           value={gameCode}
@@ -60,8 +72,8 @@ export default function JoinGame() {
           onClick={joinGame}
         >
           <PlayArrowIcon />
-            JOIN
-          </Fab>
+          JOIN
+        </Fab>
       </PageWrapper>
     </Auth>
   );

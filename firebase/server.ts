@@ -10,7 +10,7 @@ const GAME_CODE_LENGTH = 6;
 
 function createGame(gameName: string, gameGenre: string, hostName: string, hostId: string) {
     return doesGameNameExist(gameName).then((_) => {
-        console.log('game name does not exist, creating new game')
+        console.log('game name does not exist, creating new game');
         const gameCode = generateGameCode();
         if (!gameName) {
             gameName = `${hostName}'s Game`;    // Set gameName if not passed
@@ -30,11 +30,13 @@ function createGame(gameName: string, gameGenre: string, hostName: string, hostI
         };
 
         return axios.request(generateGameContentConfig).then(gameDetails => {
+            const expiryTime = new Date().getTime() + 7200000 ; // 2 hours
+            gameDetails.data['expiryTime'] = expiryTime; // TODO: is there a better way to do this?
+            console.log(gameDetails);
             return getFirebaseApp().firestore().collection("games")
                 .add(gameDetails.data)
                 .then((docRef) => {
-                    console.log(docRef)
-                    console.log("successfully created game with id: ", docRef.id);
+                    console.log(`successfully created game with id: ${docRef.id} and code: ${gameCode}`);
                     return docRef.id;
                 })
                 .catch((error) => {
@@ -84,7 +86,8 @@ function doesGameNameExist(name) {
 
 function getPossibleGenres() {
     // TODO: replace with call to spotify api, endpoint: https://api.spotify.com/v1/recommendations/available-genre-seeds
-    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno", "deep-house"] //change at will
+    const supportedGenres = ["house", "dance", "hip-hop", "latin", "reggae", "techno", "deep-house", 
+                            "acoustic", "ambient", "brazil", "chill", "country", "dubstep", "edm", "happy"] //change at will
     return availableGenres['genres']
         .map((genre) => {
             return {
@@ -98,15 +101,21 @@ function getPossibleGenres() {
 function attemptToJoinGame(gameCode: string, playerId: string, playerName: string) {
     return getFirebaseApp().firestore().collection("games")
         .where("gameCode", "==", gameCode)
-        .get().then((games) => {
+        .get()
+        .then((games) => {
             if (!games.empty) {
-                console.log(games)
+                const timeNow = new Date().getTime();
+                if (timeNow > games.docs[0].data().expiryTime) {
+                    return { gameId: games.docs[0].id, error: `Unfortunately game ${gameCode} is over already :(` };
+                }
                 const gameId = games.docs[0].id;
-                return exportFunctions.joinGame(gameId, playerId, playerName);
+                return exportFunctions.joinGame(gameId, playerId, playerName); //TODO do we need exportFunctions here?
             } else {
                 return Promise.reject({ fieldName: "gameCode", message: `Game code: ${gameCode} does not exist` })
             }
-        }).catch((error) => (error));
+        }).catch((error) => {
+            error
+        });
 }
 
 
@@ -149,6 +158,14 @@ function startGame(gameId: string): void {
     return;
 }
 
+function finishGame(gameId: string): void {
+    const expiryTime = new Date().getTime()
+    getFirebaseApp().firestore().collection("games")
+        .doc(gameId)
+        .update({ expiryTime })
+    return;
+}
+
 function deleteGame(gameId: string): Promise<string> {
     const gameDocRef = getFirebaseApp().firestore().collection("games").doc(gameId);
     return getFirebaseApp().firestore().runTransaction((transaction) => {
@@ -180,11 +197,13 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
             if (!gameDoc.exists) {
                 return Promise.reject(`Game Id ${gameId} is invalid`)
             }
+
             const gameData = gameDoc.data();
             const leaderBoard = gameData.leaderBoard;
             if (!gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
                 return Promise.reject(`Player ${userId} is not in game ${gameId}.`);
             }
+
             if (Object.keys(leaderBoard).length > 1) {
                 var newLeaderBoard = {}
                 Object.keys(leaderBoard).forEach(playerId => {
@@ -198,10 +217,13 @@ function leaveGame(gameId: string, userId: string): Promise<string> {
                     const newHostId = usersLeft[usersLeft.length * Math.random() << 0];
                     transaction.update(gameDocRef, { 'hostId': newHostId })
                 }
+
+                //TODO: do we need to return a resolved promise here?
                 return `Player ${userId} left game ${gameId}.`;
             }
             else {
                 deleteGame(gameId);
+                //TODO: do we need to return a resolved promise here?
                 return `Player ${userId} left game ${gameId}, ending the game.`
             }
         })
@@ -251,6 +273,7 @@ function isUserInGame(gameId: string, userId: string): Promise<boolean> {
             if (gameDoc.data().leaderBoard.hasOwnProperty(userId)) {
                 return true
             }
+
             return false
         }).catch(error => {
             return Promise.reject(error)
@@ -261,7 +284,7 @@ function getGameIdByGameCode(gameCode: string): Promise<string> {
     return getFirebaseApp().firestore().collection("games")
         .where("gameCode", "==", gameCode)
         .get()
-        .then(games => {
+        .then((games) => {
             if (games.empty) {
                 return Promise.reject(`Game code ${gameCode} is invalid.`)
             }
@@ -279,6 +302,22 @@ function getGameIdByGameCode(gameCode: string): Promise<string> {
         })
 }
 
+async function getGameCodeByGameId(gameId: string): Promise<string> {
+    return getFirebaseApp().firestore().collection("games")
+        .doc(gameId)
+        .get()
+        .then((gameDoc) => {
+            if (!gameDoc.exists) {
+                return Promise.reject(`Game Id: ${gameId} is invalid`);
+            } 
+            else if (gameDoc.data()) {
+                return gameDoc.data().gameCode;
+            }
+        }).catch((error) => {
+            return Promise.reject(error);
+        });
+}
+
 
 const exportFunctions = {
     doesGameNameExist,
@@ -287,12 +326,14 @@ const exportFunctions = {
     attemptToJoinGame,
     joinGame,
     startGame,
+    finishGame,
     deleteGame,
     endGame,
     leaveGame,
     increasePlayerScore,
     isUserInGame,
     getGameIdByGameCode,
+    getGameCodeByGameId,
     generateGameCode
 };
 

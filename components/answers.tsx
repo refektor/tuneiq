@@ -1,11 +1,28 @@
 import { useState } from "react";
-import { List } from '@material-ui/core';
-import AnswerItem from './answer'
+import { List, Snackbar, makeStyles } from '@material-ui/core';
+import clsx from 'clsx';
+import AnswerItem from './answer';
+
+const useStyles = makeStyles((theme) => ({
+    correct: {
+        background: "#73d13d"
+    },
+
+    incorrect: {
+        background: "#ff4d4f"
+    },
+}))
 
 export default function AnswerList(props) {
-
+    const classes = useStyles();
     const [answerSubmitted, setAnswerSubmitted] = useState(false);
     const [correctAnswerSubmitted, setCorrectAnswerSubmitted] = useState(false);
+
+    const handleClose = (event: React.SyntheticEvent | React.MouseEvent, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+    };
 
     function answerClicked(isCorrect) {
         setAnswerSubmitted(true);
@@ -18,20 +35,56 @@ export default function AnswerList(props) {
     function getAnswerText() {
         const correctAnswer = props.answers.find((answer) => (answer.isCorrect));
         if (correctAnswerSubmitted) {
-            return `You're right! This song is called ${correctAnswer.answerText}`;
+            return (
+                <>
+                    <strong>{"Correct! "}</strong>
+                    {"This song is called"}
+                    <strong> {correctAnswer.answerText}</strong>
+                </>
+            )
         } else {
-            return `You're wrong! This This song is called ${correctAnswer.displayText}`;
+            return (
+                <>
+                    <strong>{"Nope! "}</strong>
+                    {"This song is called"}
+                    <strong> {correctAnswer.answerText}</strong>
+                </>
+            )
         }
     }
 
     return (
         <List>
-        {answerSubmitted && 
-        <p>{getAnswerText()}</p>
-        }
+        {answerSubmitted && (
+            <Snackbar
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                }}
+                ContentProps={{
+                    classes: {
+                        root: clsx({
+                            [classes.correct]: correctAnswerSubmitted,
+                            [classes.incorrect]: !correctAnswerSubmitted,
+                        }),
+                    }
+                }}
+                open={true}
+                autoHideDuration={3000}
+                onClose={handleClose}
+                message={getAnswerText()}
+            />
+        )}
+
         {
             props.answers.map((answer) => (
-                <AnswerItem disabled={answerSubmitted} key={answer.id} displayText={answer.displayText} isCorrect={answer.isCorrect} onClick={answerClicked}/>
+                <AnswerItem 
+                    key={answer.id}
+                    disabled={answerSubmitted} 
+                    displayText={answer.displayText} 
+                    isCorrect={answer.isCorrect} 
+                    onClick={answerClicked}
+                />
             ))
         }
         </List>

@@ -2,24 +2,31 @@
  * Page repsonsible for hosting the game content.
  */
 import { Component } from "react";
-import ReactPlayer from 'react-player'
-import { Button } from '@material-ui/core';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import ReactPlayer from 'react-player';
+import { withRouter, Router } from 'next/router';
+import { Button, Fab, CircularProgress, Typography } from '@material-ui/core';
 import {getFirebaseApp} from '../../firebase/firebase';
 import server from '../../firebase/server';
 import Auth from '../../components/auth';
 import PageWrapper from '../../components/page_wrapper';
 import AnswerList from '../../components/answers';
 import Leaderboard from '../../components/leaderboard';
+import ExitGameComponent from '../../components/exit_game';
 import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
 
 const FirebaseApp = getFirebaseApp();
 
 const useStyles = (theme: Theme) =>
     createStyles({
-            emphasisText: {
-                color: theme.palette.primary.main,
-            }
+        emphasisText: {
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+        },
+
+        text: {
+            textAlign: "center",
+            margin: theme.spacing(0, 0, 10),
+        }
     });
 
 enum EventType {
@@ -47,6 +54,7 @@ interface State {
     roundDuration?: number;
     roundInSession?: boolean;
     gameEnded?: boolean;
+    gameCode: string,
     leaderboard?: any;
     roundAnswers?: any[];
     roundProgress?: number;
@@ -55,6 +63,7 @@ interface State {
 interface Props {
     gameId: string;
     classes: any;
+    router: Router;
 }
 
 class PlayGame extends Component<Props, State> {
@@ -73,11 +82,16 @@ class PlayGame extends Component<Props, State> {
             roundDuration: 10000,
             roundInSession: false,
             gameEnded: false,
+            gameCode: "",
             leaderboard: [],
             roundAnswers: [],
         };
 
         this.timerInterval = 100;
+
+        server.getGameCodeByGameId(this.props.gameId).then((gameCode) => {
+            this.setState({ gameCode });
+        })
 
         FirebaseApp.firestore().collection("games").doc(this.props.gameId)
             .onSnapshot((doc) => {
@@ -86,6 +100,8 @@ class PlayGame extends Component<Props, State> {
     }
 
     handleGameUpdate(gameObj): void {
+        if (!gameObj) return; //if not gameObj, it was deleted so don't do anything here
+
         const isHost: boolean = gameObj.hostId === FirebaseApp.auth().currentUser?.uid;
         const leaderboard = Object.keys(gameObj.leaderBoard).map((id, index) => {
             return { 'name': gameObj.leaderBoard[id].name, 'score': gameObj.leaderBoard[id].score }
@@ -124,7 +140,8 @@ class PlayGame extends Component<Props, State> {
             if (this.timingEvents.length === 0) {
                 // end game!
                 clearInterval(this.intervalTimeoutId);
-                this.setState({gameEnded: true})
+                this.setState({gameEnded: true});
+                server.finishGame(this.props.gameId);
                 return;
             }
             // change display (start/end round)
@@ -155,9 +172,9 @@ class PlayGame extends Component<Props, State> {
             let roundProgress = 100;
             if (event === EventType.START) {
                 // intermission
-                roundProgress = Math.ceil((remainingTime / this.state.intermissionDuration) * 100)
+                roundProgress = Math.ceil((remainingTime / this.state.intermissionDuration) * 100);
             } else {
-                roundProgress = Math.ceil((remainingTime / this.state.roundDuration) * 100)
+                roundProgress = Math.ceil((remainingTime / this.state.roundDuration) * 100);
             }
             this.setState({
                 countdownMessage: `Round ${round} of ${this.state.numberOfRounds} ${event} in ${Math.ceil(remainingTime / 1000)}`,
@@ -243,24 +260,55 @@ class PlayGame extends Component<Props, State> {
         server.increasePlayerScore(this.props.gameId, FirebaseApp.auth().currentUser.uid, pctRoundRemaining);
     }
 
+    exitGame() {
+        this.props.router.push({
+            pathname: "/",
+        });
+    }
+
     getContent() {
+        const { classes } = this.props;
+
         if (this.state.gameEnded) {
             return (
                 <>
-                    <p className="description">Game Over</p>
+                    <p className="description">Game Over!</p>
+                    <Typography variant="h6" className={classes.text}>
+                        Congrats {" "}
+                        <span className={classes.emphasisText}>
+                            {this.state.leaderboard[0].name}
+                        </span> 
+                        {" "} on winning with
+                        {" "}
+                        <span className={classes.emphasisText}>
+                            {this.state.leaderboard[0].score}
+                        </span>
+                        {" "} points!
+                        <br />
+                        Thanks for playing - see you next time!
+                    </Typography>
+                    <Fab
+                        variant="extended"
+                        color="primary"
+                        size="large"
+                        className={classes.button}
+                        onClick={this.exitGame.bind(this)}
+                    >
+                        MAIN MENU
+                    </Fab>
                 </>
             );
         } else if (this.state.gameStarted) {
             return (
                 <>
                 {
-                this.state.songUrl && 
-                <>
-                <img src="/music-gif.gif"/>
-                <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
-                <p className="description">What is the name of this tune?</p>
-                <AnswerList answers={this.state.roundAnswers} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
-                </>
+                    this.state.songUrl && 
+                    <>
+                        <img src="/pink-equalizer.gif" height="200" width="400" />
+                        <ReactPlayer  height={0} url={this.state.songUrl} playing={this.state.playing} />
+                        <p className="description">What is the name of this tune?</p>
+                        <AnswerList answers={this.state.roundAnswers} onCorrectAnswer={this.correctAnswerSubmitted.bind(this)}/>
+                    </>
                 }
                 </>
             )
@@ -268,7 +316,23 @@ class PlayGame extends Component<Props, State> {
             return (
                 <>
                     <p className="description">Waiting for game to start</p>
-                    {(this.state.isHost) && <Button onClick={this.startGameClicked.bind(this)}>Start game</Button>}
+                    <Typography variant="h6" className={classes.text}>
+                        Share this code with your friends to join the game
+                        <br />
+                        <span className={classes.emphasisText}>
+                            {this.state.gameCode}
+                        </span>
+                    </Typography>
+                    {this.state.isHost && 
+                        <Fab
+                        variant="extended"
+                        color="primary"
+                        size="large"
+                        className={classes.button}
+                        onClick={this.startGameClicked.bind(this)}>
+                            START GAME
+                        </Fab>
+                    }
                 </>
             );
         }
@@ -278,23 +342,24 @@ class PlayGame extends Component<Props, State> {
         const { classes } = this.props;
         return (
             <PageWrapper>
-            <Auth attemptSignIn={true}>
-            <Leaderboard leaderboard={this.state.leaderboard} />
-            {this.state.gameStarted && !this.state.gameEnded &&
-            <>
-            <p className="description">{this.state.countdownMessage}</p>
-            <CircularProgress variant="static" value={this.state.roundProgress}/>
-            </>}
-            
-            {this.getContent()}
-
-            </Auth>
+                <Auth attemptSignIn={true}>
+                    <ExitGameComponent gameId={this.props.gameId} />
+                    <Leaderboard leaderboard={this.state.leaderboard} />
+                    {this.state.gameStarted && !this.state.gameEnded &&
+                        <>
+                            <p className="description">{this.state.countdownMessage}</p>
+                            <CircularProgress variant="static" value={this.state.roundProgress}/>
+                        </>
+                    }
+                    
+                    {this.getContent()}
+                </Auth>
             </PageWrapper>
         )
     }
 }
 
-export default withStyles(useStyles)(PlayGame);
+export default withRouter (withStyles(useStyles) (PlayGame));
 
 export async function getServerSideProps(context) {
     return {
